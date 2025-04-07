@@ -16,7 +16,7 @@
 
     "configuration": {
       "configuration": "Configuration",
-      "licence": "Licence",
+      "licence": "Gestion des Licences",
       "gestion-utilisateur": "Gestion des utilisateurs"
     }
   }

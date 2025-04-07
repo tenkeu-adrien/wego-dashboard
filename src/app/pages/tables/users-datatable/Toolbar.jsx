@@ -41,7 +41,7 @@ export function Toolbar({ table  ,onAddUser}) {
       >
         <div className="min-w-0">
           <h2 className="truncate text-xl font-medium tracking-wide text-gray-800 dark:text-dark-50">
-            Users Table
+            Gestion des utilisateurs
           </h2>
         </div>
         {isXs ? (

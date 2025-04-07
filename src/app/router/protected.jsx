@@ -121,9 +121,9 @@ const protectedRoutes = {
               element: <Navigate to="/dashboards/activity" />,
             },
             {
-              path: "licence",
+              path: "gestion-licence",
               lazy: async () => ({
-                Component: (await import("app/pages/tables/users-datatable")).default,
+                Component: (await import("app/pages/tables/price-list")).default,
               }),
             },
             {

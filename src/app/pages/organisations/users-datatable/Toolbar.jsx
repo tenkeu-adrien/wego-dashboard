@@ -41,7 +41,7 @@ export function Toolbar({ table  ,onAddUser}) {
       >
         <div className="min-w-0">
           <h2 className="truncate text-xl font-medium tracking-wide text-gray-800 dark:text-dark-50">
-            Users Table
+            Gestion des Entreprises
           </h2>
         </div>
         {isXs ? (
@@ -319,12 +319,12 @@ export function Toolbar({ table  ,onAddUser}) {
               isFullScreenEnabled ? "px-4 sm:px-5" : "px-[--margin-x]",
             )}
           >
-            {table.getColumn("role") && (
+            {/* {table.getColumn("role") && (
               <RoleFilter
                 column={table.getColumn("role")}
                 options={rolesOptions}
               />
-            )}
+            )} */}
             
           </div>
         </>

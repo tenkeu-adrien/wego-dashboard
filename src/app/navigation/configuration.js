@@ -92,8 +92,8 @@ export const configuration = {
             Icon: UsersIcon,
         },
         {
-            id: 'licence',
-            path: path(ROOT_APPS, '/licence'),
+            id: 'gestion des licences',
+            path: path(ROOT_APPS, '/gestion-licence'),
             type: NAV_TYPE_ITEM,
             title: 'Licence',
             transKey: 'nav.configuration.licence',
