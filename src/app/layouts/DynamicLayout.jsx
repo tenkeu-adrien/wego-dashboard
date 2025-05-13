@@ -9,9 +9,10 @@ import { SplashScreen } from "components/template/SplashScreen";
 // ----------------------------------------------------------------------
 
 const themeLayouts = {
-  "main-layout": lazy(() => import("./MainLayout")),
   sideblock: lazy(() => import("./Sideblock")),
+  "main-layout": lazy(() => import("./MainLayout")),
 };
+
 
 export function DynamicLayout() {
   const { themeLayout } = useThemeContext();

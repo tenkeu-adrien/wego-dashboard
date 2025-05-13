@@ -291,7 +291,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog
         as="div"
-        className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-4 py-6 sm:px-5"
+        className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-[200px] py-6 sm:px-8 overflow-scroll"
         onClose={onClose}
       >
         <TransitionChild
@@ -314,7 +314,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-        > <DialogPanel className="relative flex w-full max-w-4xl flex-col overflow-hidden rounded-lg bg-white shadow-xl transition-all duration-300 dark:bg-dark-700">
+        > <DialogPanel className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-xl transition-all duration-300 dark:bg-dark-700">
         {/* Header avec bouton fermeture */}
         <div className="flex justify-end p-4">
           <Button
@@ -355,44 +355,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
               </div>
             </div>
             <TabPanels className="mt-4">
-                  {/* Onglet Organisation */}
-                  {/* <TabPanel>
-                    <Card className="flex grow flex-col items-center p-4 sm:p-5">
-                      <Avatar
-                        size={20}
-                        name={data?.name}
-                        src={data?.avatar}
-                        initialColor="auto"
-                        classNames={{
-                          display: "text-2xl",
-                        }}
-                      />
-                      <h3 className="pt-3 text-lg font-medium text-gray-800 dark:text-dark-100">
-                        {data?.name}
-                      </h3>
-                      <p className="text-xs+">{data?.license}</p>
-                      <div className="my-4 h-px w-full bg-gray-200 dark:bg-dark-500"></div>
-                      <div className="mx-auto inline-grid grid-cols-1 gap-3">
-                        <div className="flex min-w-0 items-center space-x-2">
-                          <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-600/10 text-primary-600">
-                            <PhoneIcon className="size-3.5" />
-                          </div>
-                          <p className="truncate">{data?.phone}</p>
-                        </div>
-                        <div className="flex min-w-0 items-center space-x-2">
-                          <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-600/10 text-primary-600">
-                            <EnvelopeIcon className="size-3.5" />
-                          </div>
-                          <p className="truncate">{data?.email}</p>
-                        </div>
-                        <div className="flex min-w-0 items-center space-x-2">
-                          <Badge color={data?.status ? "success" : "error"}>
-                            {data?.status ? "Actif" : "Inactif"}
-                          </Badge>
-                        </div>
-                      </div>
-                    </Card>
-                  </TabPanel> */}
+                
 <TabPanel>
   <Card className="flex grow flex-col items-center p-4 sm:p-5">
     <Avatar
@@ -420,7 +383,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
         <div className="flex size-6 shrink-0 items-center justify-center rounded-lg bg-primary-600/10 text-primary-600">
           <EnvelopeIcon className="size-3.5" />
         </div>
-        <p className="truncate">{data?.email}</p>
+        <p className="truncate">{data?.email} </p>
       </div>
       <div className="flex min-w-0 items-center space-x-2">
         <Badge color={data?.status ? "success" : "error"}>

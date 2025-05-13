@@ -103,7 +103,7 @@ export default function SignIn() {
             </form>
             <div className="mt-4 text-center text-xs+">
               <p className="line-clamp-1">
-                <span>Dont have Account?</span>{" "}
+                <span>Dont have Account?</span>
                 <Link
                   className="text-primary-600 transition-colors hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-600"
                   to="/pages/sign-up-v1"

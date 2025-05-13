@@ -1,91 +1,60 @@
-// Import Dependencies
 import { forwardRef } from "react";
-import PropTypes from "prop-types";
-import clsx from "clsx";
-
-// Local Imports
-import { COLORS } from "constants/app.constant";
-import { setThisClass } from "utils/setThisClass";
-
-// ----------------------------------------------------------------------
 
 const Progress = forwardRef((props, ref) => {
   const {
     children,
     value = 0,
     showRail = true,
-    isActive = false,
-    isIndeterminate = false,
-    unstyled = false,
-    color = "neutral",
-    variant = "default",
-    className,
-    classNames,
-    animationDuration,
+    price,
+    category,
+    className = "",
     style = {},
     rootProps = {},
     ...rest
   } = props;
 
+  // Couleur bleue fixe avec différentes opacités
+  const blueColor = {
+    rail: 'bg-blue-00 dark:bg-blue-900/30',
+    bar: 'bg-blue-600 dark:bg-blue-500',
+    text: 'text-white'
+  };
+
   return (
-    <div
-      {...rootProps}
-      className={clsx(
-        "progress-rail",
-        showRail &&
-          !unstyled && [
-            color === "neutral" || variant !== "soft"
-              ? "bg-gray-150 dark:bg-dark-500"
-              : [setThisClass(color), "bg-this/[.15] dark:bg-this-light/25"],
-          ],
-        className,
-        classNames?.root,
+    <div className={`flex items-center gap-4 w-full ${className}`}>
+      {category && (
+        <span className="w-32 text-sm font-medium text-gray-600 dark:text-gray-300">
+          {category}
+        </span>
       )}
-    >
-      <div
-        {...rest}
-        ref={ref}
-        className={clsx(
-          "progress relative rounded-full transition-[width] ease-out",
-          !unstyled && [
-            color === "neutral"
-              ? "bg-gray-500 dark:bg-dark-400"
-              : [setThisClass(color), "bg-this dark:bg-this-light"],
-          ],
-          isActive && "is-active",
-          isIndeterminate
-            ? "is-indeterminate"
-            : "flex items-center justify-end leading-none",
-          classNames?.bar,
-        )}
-        style={{
-          width: isIndeterminate ? "100%" : `${value}%`,
-          animationDuration,
-          ...style,
-        }}
-      >
-        {children}
-      </div>
+      
+      {showRail && (
+        <div
+          {...rootProps}
+          className={`flex-1 h-6 overflow-hidden ${blueColor.rail}`}
+        >
+          <div
+            {...rest}
+            ref={ref}
+            className={`h-full flex items-center justify-end transition-all duration-300 ease-out ${blueColor.bar}`}
+            style={{
+              width: `${value}%`,
+              borderRadius: '0 4px 4px 0', // Arrondi seulement à droite
+              ...style,
+            }}
+          >
+            {price && (
+              <span className={`text-xs font-medium ${blueColor.text} px-2`}>
+                {price} 
+              </span>
+            )}
+            {children}
+          </div>
+        </div>
+      )}
     </div>
   );
 });
-
-Progress.propTypes = {
-  children: PropTypes.node,
-  value: PropTypes.number,
-  showRail: PropTypes.bool,
-  isActive: PropTypes.bool,
-  isIndeterminate: PropTypes.bool,
-  unstyled: PropTypes.bool,
-  color: PropTypes.oneOf(COLORS),
-  variant: PropTypes.oneOf(["default", "soft"]),
-  className: PropTypes.string,
-  classNames: PropTypes.object,
-  animationDuration: PropTypes.string,
-  style: PropTypes.object,
-  rootStyle: PropTypes.object,
-  rootProps: PropTypes.object,
-};
 
 Progress.displayName = "Progress";
 

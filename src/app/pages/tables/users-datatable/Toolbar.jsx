@@ -363,9 +363,9 @@ export function Toolbar({ table  ,onAddUser}) {
         }}
       >
         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-          {table.getColumn("role") && (
+          {/* {table.getColumn("role") && (
             <RoleFilter column={table.getColumn("role")} options={rolesOptions} />
-          )}
+          )} */}
           {/* <button className="bg-green-600 px-4 py-2 rounded text-white">
             Add new user
           </button> */}

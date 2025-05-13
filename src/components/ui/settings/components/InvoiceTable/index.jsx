@@ -74,8 +74,8 @@ export function InvoiceTable() {
   return (
     <div>
       <Toolbar table={table} />
-      <Box className="relative -mx-4 mt-3 sm:-mx-5">
-        <div className="table-wrapper min-w-full overflow-x-auto">
+      <Box className="relative -mx-4 mt-3 sm:-mx-5 ">
+        <div className="table-wrapper min-w-full overflow-x-auto ">
           <Table hoverable className="w-full text-left rtl:text-right">
             <THead>
               {table.getHeaderGroups().map((headerGroup) => (
@@ -135,7 +135,8 @@ export function InvoiceTable() {
           </Table>
         </div>
         {table.getCoreRowModel().rows.length && (
-          <div className="px-4 pb-2 pt-6 sm:px-5">
+          <div className="px-4 pb-2 pt-6 sm:px-5 bg-red-500">
+            <h1>ok le text est bon !!!</h1>
             <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
               <div>
                 <Pagination
@@ -152,8 +153,8 @@ export function InvoiceTable() {
               </div>
               <div className="truncate text-xs+">
                 {paginationState.pageIndex * paginationState.pageSize + 1} -{" "}
-                {table.getRowModel().rows.length} of{" "}
-                {table.getCoreRowModel().rows.length} entries
+                {table.getRowModel().rows.length} 
+                {table.getCoreRowModel().rows.length} 
               </div>
             </div>
           </div>
