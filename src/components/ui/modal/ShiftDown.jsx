@@ -235,7 +235,6 @@ import PropTypes from 'prop-types';
 import { Circlebar } from "components/ui";
 import { InvoiceTable } from "../settings/components/InvoiceTable";
 import { Tag } from "components/ui";
-// import { Highlight } from "components/shared/Highlight";
 const tabs = [
   {
     id: 1,
@@ -295,7 +294,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
         onClose={onClose}
       >
         <TransitionChild
-          as={Fragment}
+          as="div"
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
@@ -307,14 +306,16 @@ export function ShiftDown({ isOpen, onClose, data }) {
         </TransitionChild>
 
         <TransitionChild
-          as={Fragment}
+          as={DialogPanel}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
           enterTo="opacity-100"
           leave="ease-in duration-200"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
-        > <DialogPanel className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-xl transition-all duration-300 dark:bg-dark-700">
+          className="relative flex w-full max-w-5xl flex-col overflow-hidden rounded-lg bg-white shadow-xl transition-all duration-300 dark:bg-dark-700"
+        > 
+        <>
         {/* Header avec bouton fermeture */}
         <div className="flex justify-end p-4">
           <Button
@@ -585,7 +586,7 @@ export function ShiftDown({ isOpen, onClose, data }) {
                 </TabPanels>
               </TabGroup>
             </div>
-          </DialogPanel>
+          </>
         </TransitionChild>
       </Dialog>
     </Transition>

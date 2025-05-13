@@ -1,0 +1,1 @@
+const e={dashboards:{dashboards:"Dashboards",home:"Home",activity:"Activity",client:"client",organisations:"Entreprises"},settings:{settings:"Settings",general:"General",appearance:"Appearance"},configuration:{configuration:"Configuration",licence:"Gestion des Licences","gestion-utilisateur":"Gestion des utilisateurs"}},t={nav:e};export{t as default,e as nav};

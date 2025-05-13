@@ -14,19 +14,19 @@ import { useState } from "react";
 import { TableSortIcon } from "components/shared/table/TableSortIcon";
 import {
   Box,
-  Pagination,
+  // Pagination,
   Table,
   THead,
   TBody,
   Th,
   Tr,
   Td,
-  PaginationPrevious,
-  PaginationItems,
-  PaginationNext,
+  // PaginationPrevious,
+  // PaginationItems,
+  // PaginationNext,
 } from "components/ui";
 import { fuzzyFilter } from "utils/react-table/fuzzyFilter";
-import { useBreakpointsContext } from "app/contexts/breakpoint/context";
+// import { useBreakpointsContext } from "app/contexts/breakpoint/context";
 import { columns } from "./columns";
 import { invoiceList } from "./invoiceList";
 import { Toolbar } from "./Toolbar";
@@ -35,7 +35,7 @@ import { Toolbar } from "./Toolbar";
 
 export function InvoiceTable() {
   const [invoices] = useState([...invoiceList]);
-  const { isXl, is2xl } = useBreakpointsContext();
+  // const { isXl, is2xl } = useBreakpointsContext();
 
   const [globalFilter, setGlobalFilter] = useState("");
   const [sorting, setSorting] = useState([]);
@@ -69,7 +69,7 @@ export function InvoiceTable() {
     getPaginationRowModel: getPaginationRowModel(),
   });
 
-  const paginationState = table.getState().pagination;
+  // const paginationState = table.getState().pagination;
 
   return (
     <div>
@@ -134,7 +134,7 @@ export function InvoiceTable() {
             </TBody>
           </Table>
         </div>
-        {table.getCoreRowModel().rows.length && (
+        {/* {table.getCoreRowModel().rows.length && (
           <div className="px-4 pb-2 pt-6 sm:px-5 bg-red-500">
             <h1>ok le text est bon !!!</h1>
             <div className="flex flex-col justify-between space-y-4 sm:flex-row sm:items-center sm:space-y-0">
@@ -158,7 +158,7 @@ export function InvoiceTable() {
               </div>
             </div>
           </div>
-        )}
+        )} */}
       </Box>
     </div>
   );
