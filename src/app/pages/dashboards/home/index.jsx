@@ -45,7 +45,7 @@ export default function Sales() {
       <div className="transition-content overflow-hidden px-[--margin-x] pb-8">
         {/* Section 0 - Filtres */}
         <div className="flex gap-4 mb-6 justify-between mt-4">
-<div> <p>Admin dashboards</p></div>
+<div> <h1 className="text-xl">Admin Dashboard</h1></div>
 
          <div className="">
          <select className="px-4 py-2 border rounded mr-2">
@@ -64,13 +64,13 @@ export default function Sales() {
         <div className="grid grid-cols-12 gap-6 mb-6 " >
           <div className="col-span-6 ">
             <div className="bg-white p-4 rounded-lg shadow h-[290px]">
-              <h3 className="text-lg font-semibold mb-4">Ventes par région</h3>
+              <h3 className="text-lg font-semibold mb-4"> Les Ventes par région</h3>
               {/* Composant Carte */}
             </div>
           </div>
           <div className="col-span-6 ">
             <div className="bg-white p-4 rounded-lg shadow h-[290px]">
-              <h3 className="text-lg font-semibold mb-4">Ventes mensuelles</h3>
+              <h3 className="text-lg font-semibold mb-4"> Les Ventes mensuelles</h3>
               {/* Composant Graphique mensuel */}
             </div>
           </div>
