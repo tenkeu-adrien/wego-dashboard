@@ -13,7 +13,7 @@ import { SocialSource } from "../SocialSource";
 
 export default function Sales() {
   return (
-    <Page title="Cumuled Dashboard">
+    <Page title="Zego Dashboard">
       <div className="transition-content overflow-hidden px-[--margin-x] pb-8">
         <Statistics />
         <div className="mt-4 grid grid-cols-12 gap-4 sm:mt-5 sm:gap-5 lg:mt-6 lg:gap-6">

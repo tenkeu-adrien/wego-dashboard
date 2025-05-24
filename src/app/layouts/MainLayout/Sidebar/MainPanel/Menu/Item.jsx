@@ -34,8 +34,8 @@ export function Item({
       className={clsx(
         "relative flex size-11 shrink-0 items-center justify-center rounded-lg outline-none transition-colors duration-200",
         isActive
-          ? "bg-primary-600/10 text-primary-600 dark:bg-primary-400/15 dark:text-primary-400"
-          : "text-gray-500 hover:bg-primary-600/20 focus:bg-primary-600/20 active:bg-primary-600/25 dark:text-dark-200 dark:hover:bg-dark-300/20 dark:focus:bg-dark-300/20 dark:active:bg-dark-300/25",
+          ? "bg-green-600/10 text-green-600 dark:bg-green-400/15 dark:text-green-400"
+          : "text-gray-500 hover:bg-green-600/20 focus:bg-green-600/20 active:bg-green-600/25 dark:text-dark-200 dark:hover:bg-dark-300/20 dark:focus:bg-dark-300/20 dark:active:bg-dark-300/25",
       )}
       onKeyDown={createScopedKeydownHandler({
         siblingSelector: "[data-root-menu-item]",

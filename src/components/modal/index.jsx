@@ -21,7 +21,7 @@ const demos = [
   {
     title: "Basic",
     description:
-      "<a href='https://headlessui.com/react/dialog' class='text-primary-600 dark:text-primary-400 hover:underline'>Headless UI</a> A fully-managed, renderless dialog component jam-packed with accessibility and keyboard features, perfect for building completely custom modal and dialog windows.",
+      "<a href='https://headlessui.com/react/dialog' class='text-green-600 dark:text-green-400 hover:underline'>Headless UI</a> A fully-managed, renderless dialog component jam-packed with accessibility and keyboard features, perfect for building completely custom modal and dialog windows.",
     Component: Basic,
     markdownName: "Basic",
   },

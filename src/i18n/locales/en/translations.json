@@ -5,7 +5,20 @@
       "home": "Home",
       "activity": "Activity",
       "client": "client",
-      "organisations":"Entreprises"
+      "organisations":"Entreprises" ,
+      "gestion":"Gestion des utilisateurs" ,
+      "conducteur":"Conducteurs" ,
+      "livreur":"Livreurs" ,
+      "partenaire":"Partenaires" ,
+      "produit":"Produits" ,
+      "tarif":"Tarif" ,
+      "paiement":"Paiement",
+      "commission":"Commissions" ,
+      "point":"Points de vente" ,
+      "finance":"Finances",
+     
+      "suivi":"Suivi des trajets" ,
+      "course":"Courses"
     },
 
     "settings": {
@@ -16,8 +29,12 @@
 
     "configuration": {
       "configuration": "Configuration",
-      "licence": "Gestion des Licences",
-      "gestion-utilisateur": "Gestion des utilisateurs"
+      "licence": "Gestion des Litiges",
+      "gestion-utilisateur": "Services D’assistance",
+      "suivi":"Suivi des trajets" ,
+      "point":"point" ,
+      "rapport":"Rapport" ,
+      "course":"Courses"
     }
   }
 }

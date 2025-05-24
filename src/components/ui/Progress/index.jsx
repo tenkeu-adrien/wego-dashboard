@@ -15,8 +15,8 @@ const Progress = forwardRef((props, ref) => {
 
   // Couleur bleue fixe avec différentes opacités
   const blueColor = {
-    rail: 'bg-blue-00 dark:bg-blue-900/30',
-    bar: 'bg-blue-600 dark:bg-blue-500',
+    rail: 'bg-green-00 dark:bg-green-900/30',
+    bar: 'bg-green-600 dark:bg-green-500',
     text: 'text-white'
   };
 

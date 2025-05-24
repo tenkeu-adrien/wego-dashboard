@@ -76,7 +76,7 @@ const ROOT_APPS = '/configuration'
 const path = (root, item) => `${root}${item}`
 
 export const configuration = {
-    id: 'configuration',
+    id: 'support',
     type: NAV_TYPE_ROOT,
     path: '/configuration',
     title: 'Configuration',
@@ -84,18 +84,18 @@ export const configuration = {
     Icon: ConfigIcon,
     childs: [
         {
-            id: 'gestion des utilisateurs',
+            id: 'support client',
             path: path(ROOT_APPS, '/gestion-utilisateur'),
             type: NAV_TYPE_ITEM,
-            title: 'Utilisateur',
+            title: 'Support client',
             transKey: 'nav.configuration.gestion-utilisateur',
             Icon: UsersIcon,
         },
         {
-            id: 'gestion des licences',
+            id: 'gestion des litiges',
             path: path(ROOT_APPS, '/gestion-licence'),
             type: NAV_TYPE_ITEM,
-            title: 'Licence',
+            title: 'Gestion des litiges',
             transKey: 'nav.configuration.licence',
             Icon: LicenseIcon,
         }

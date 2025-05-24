@@ -30,7 +30,7 @@ export function MenuItem({ data }) {
         clsx(
           "outline-none transition-colors duration-300 ease-in-out",
           isActive
-            ? "font-medium text-primary-600 dark:text-primary-400"
+            ? "font-medium text-green-600 dark:text-green-400"
             : "text-gray-600 hover:text-gray-900 dark:text-dark-200 dark:hover:text-dark-50",
         )
       }

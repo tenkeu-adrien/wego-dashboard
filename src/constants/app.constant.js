@@ -1,5 +1,5 @@
-export const APP_NAME = "ComULead";
-export const APP_KEY = "ComULead";
+export const APP_NAME = "Zego";
+export const APP_KEY = "Zego";
 
 // Redirect Paths
 export const REDIRECT_URL_KEY = "redirect";

@@ -69,7 +69,7 @@ export function SidebarPanel() {
                 className="group w-full justify-start gap-2 p-2 text-xs+"
               >
                 <QuestionMarkCircleIcon className="size-4.5 text-gray-400 transition-colors group-hover:text-gray-500 group-focus:text-gray-500 dark:text-dark-300 dark:group-hover:text-dark-200 dark:group-focus:text-dark-200" />
-                <span>Tailux Faq</span>
+                <span>Zego Faq</span>
               </Button>
             </li>
             <li>

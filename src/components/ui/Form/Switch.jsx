@@ -23,7 +23,7 @@ const Switch = forwardRef((props, ref) => {
   const {
     variant = "basic",
     unstyled,
-    color = "primary",
+    color = "success",
     className,
     classNames = {},
     label,
@@ -75,7 +75,7 @@ Switch.propTypes = {
   variant: PropTypes.oneOf(["outlined", "basic"]),
   unstyled: PropTypes.bool,
   color: PropTypes.oneOf([
-    "primary",
+    "success",
     "secondary",
     "info",
     "success",

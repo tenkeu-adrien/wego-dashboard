@@ -1,11 +1,11 @@
 // Import Dependencies
-import { Link } from "react-router";
+// import { Link } from "react-router";
 import { EnvelopeIcon, LockClosedIcon } from "@heroicons/react/24/outline";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useForm } from "react-hook-form";
 
 // Local Imports
-import Logo from "assets/appLogo.svg?react";
+// import Logo from "assets/appLogo.svg?react";
 import { Button, Card, Checkbox, Input, InputErrorMsg } from "components/ui";
 import { useAuthContext } from "app/contexts/auth/context";
 import { schema } from "./schema";
@@ -36,16 +36,17 @@ export default function SignIn() {
 
   return (
     <Page title="Login">
-      <main className="min-h-100vh grid w-full grow grid-cols-1 place-items-center">
-        <div className="w-full max-w-[26rem] p-4 sm:px-5">
-          <div className="text-center">
-            <Logo className="mx-auto size-16" />
-            <div className="mt-4">
-              <h2 className="text-2xl font-semibold text-gray-600 dark:text-dark-100">
-                ComULead
-              </h2>
-              <p className="text-gray-400 dark:text-dark-300">
-                Please sign in to continue
+      <main className="min-h-100vh grid w-full grow grid-cols-1 place-items-center ">
+        <div className="w-full max-w-[26rem]  sm:px-5 ">
+          <div className="text-center bg-yellow-400">
+            {/* <Logo  /> */}
+            <img src="/logo.png"  className="mx-auto  h-[200px] w-[200px] -mb-[60px]" alt="logo"/>
+            <div className="mt-">
+              {/* <h2 className="text-2xl font-semibold text-gray-600 dark:text-dark-100">
+                Zégo
+              </h2> */}
+              <p className="text-gray-600 dark:text-dark-300 ">
+              Veuillez vous connecter pour continuer
               </p>
             </div>
           </div>
@@ -93,15 +94,15 @@ export default function SignIn() {
                   href="##"
                   className="text-xs text-gray-400 transition-colors hover:text-gray-800 focus:text-gray-800 dark:text-dark-300 dark:hover:text-dark-100 dark:focus:text-dark-100"
                 >
-                  Forgot Password?
+                  mots de passe oublier?
                 </a>
               </div>
 
-              <Button type="submit" className="mt-5 w-full" color="primary">
-                Sign In
+              <Button type="submit" className="mt-5 w-full bg-green-700" >
+                Se connecter
               </Button>
             </form>
-            <div className="mt-4 text-center text-xs+">
+            {/* <div className="mt-4 text-center text-xs+">
               <p className="line-clamp-1">
                 <span>Dont have Account?</span>
                 <Link
@@ -134,13 +135,13 @@ export default function SignIn() {
                 />
                 <span>Github</span>
               </Button>
-            </div>
+            </div> */}
           </Card>
-          <div className="mt-8 flex justify-center text-xs text-gray-400 dark:text-dark-300">
+          {/* <div className="mt-8 flex justify-center text-xs text-gray-400 dark:text-dark-300">
             <a href="##">Privacy Notice</a>
             <div className="mx-2.5 my-0.5 w-px bg-gray-200 dark:bg-dark-500"></div>
             <a href="##">Term of service</a>
-          </div>
+          </div> */}
         </div>
       </main>
     </Page>

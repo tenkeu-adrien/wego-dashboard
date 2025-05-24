@@ -4,7 +4,7 @@ import { Link } from "react-router";
 import clsx from "clsx";
 
 // Local Imports
-import Logo from "assets/appLogo.svg?react";
+// import Logo from "assets/appLogo.svg?react";
 import { Menu } from "./Menu";
 import { Item } from "./Menu/Item";
 import { Profile } from "../../Profile";
@@ -25,9 +25,9 @@ export function MainPanel({ nav, setActiveSegment, activeSegment }) {
         )}
       >
         {/* Application Logo */}
-        <div className="flex pt-3.5">
+        <div className="flex pt-3.5 bg-yellow-500">
           <Link to="/">
-            <Logo className="size-10 text-primary-600 dark:text-primary-400" />
+            <img src="/logo.png" alt="logo"  className="size-90 text-primary-600 dark:text-primary-400"  />
           </Link>
         </div>
 
