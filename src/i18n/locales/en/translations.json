@@ -3,7 +3,7 @@
     "dashboards": {
       "dashboards": "Dashboards",
       "home": "Home",
-      "activity": "Activity",
+      "activity": "Activité",
       "client": "client",
       "organisations":"Entreprises" ,
       "gestion":"Gestion des utilisateurs" ,
@@ -16,6 +16,7 @@
       "commission":"Commissions" ,
       "point":"Points de vente" ,
       "finance":"Finances",
+      "finances":"Tarifications",
      
       "suivi":"Suivi des trajets" ,
       "course":"Courses"

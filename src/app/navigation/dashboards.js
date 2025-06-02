@@ -5,6 +5,7 @@ import BankBuildIcon from 'assets/nav-icons/people.svg?react';
 import BankBuildIco from 'assets/nav-icons/kanban.svg?react';
 import LicenseIcon from 'assets/nav-icons/license.svg?react';
 import LicenseIco from 'assets/nav-icons/steps.svg?react';
+import OrganizationsIco from 'assets/nav-icons/utility.svg?react';
 import { 
   NAV_TYPE_ROOT, 
   NAV_TYPE_ITEM, 
@@ -26,9 +27,9 @@ export const dashboards = {
   childs: [
     {
       id: 'dashboards.activity',
-      path: path(ROOT_DASHBOARDS, '/activity'),
+      path: path(ROOT_DASHBOARDS, '/activité'),
       type: NAV_TYPE_ITEM,
-      title: 'Activity',
+      title: 'activité',
       transKey: 'nav.dashboards.activity',
       Icon: StatisticIcon,
     },
@@ -39,6 +40,14 @@ export const dashboards = {
       title: 'Organisations',
       transKey: 'nav.dashboards.finance',
       Icon: OrganizationsIcon,
+    },
+    {
+      id: 'dashboards.organisations',
+      path: path(ROOT_DASHBOARDS, '/tarifications'),
+      type: NAV_TYPE_ITEM,
+      title: 'Organisations',
+      transKey: 'nav.dashboards.finances',
+      Icon: OrganizationsIco,
     },
     {
       id: 'gestion',

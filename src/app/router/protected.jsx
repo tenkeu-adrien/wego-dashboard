@@ -22,10 +22,10 @@ const protectedRoutes = {
           children: [
             {
               index: true,
-              element: <Navigate to="/dashboards/activity" />,
+              element: <Navigate to="/dashboards/activité" />,
             },
             {
-              path: "activity",
+              path: "activité",
               lazy: async () => ({
                 Component: (await import("app/pages/dashboards/home")).default,
               }),
@@ -34,6 +34,12 @@ const protectedRoutes = {
               path: "entreprises",
               lazy: async () => ({
                 Component: (await import("app/pages/finances/tarifs")).default,
+              }),
+            },
+            {
+              path: "tarifications",
+              lazy: async () => ({
+                Component: (await import("app/pages/finances/tarif")).default,
               }),
             },
             {
