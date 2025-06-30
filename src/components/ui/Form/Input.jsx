@@ -28,6 +28,7 @@ const Input = forwardRef((props, ref) => {
     ...rest
   } = props;
 
+  console.log("error", error)
   const Component = component || "input";
   const inputId = useId(id, "input");
 
@@ -35,7 +36,7 @@ const Input = forwardRef((props, ref) => {
     "absolute top-0 flex h-full w-9 items-center justify-center transition-colors",
     error
       ? "text-error dark:text-error-light"
-      : "text-gray-400 peer-focus:text-primary-600 dark:text-dark-300 dark:peer-focus:text-primary-500",
+      : "text-gray-400 peer-focus:text-[#O6A257] dark:text-dark-300 dark:peer-focus:text-[#O6A257]",
   );
 
   return (
@@ -71,7 +72,7 @@ const Input = forwardRef((props, ref) => {
                 : [
                     disabled
                       ? "cursor-not-allowed border-gray-300 bg-gray-150 opacity-60 dark:border-dark-500 dark:bg-dark-600"
-                      : "peer border-gray-300 hover:border-gray-400 focus:border-primary-600 dark:border-dark-450 dark:hover:border-dark-400 dark:focus:border-primary-500",
+                      : "peer border-gray-300 hover:border-gray-400 focus:border-[#O6A257] dark:border-dark-450 dark:hover:border-dark-400 dark:focus:border-[#O6A257]",
                   ],
             ],
             className,
@@ -108,7 +109,7 @@ const Input = forwardRef((props, ref) => {
       </div>
       <InputErrorMsg
         when={error && typeof error !== "boolean"}
-        className={classNames?.error}
+        className={clsx("mt-1 text-sm text-red-600", classNames?.error)}
       >
         {error}
       </InputErrorMsg>

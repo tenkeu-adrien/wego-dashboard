@@ -38,7 +38,7 @@ const links = [
 ];
 
 export function Profile() {
-  const {logout} = useAuthContext()
+  const {logout , user} = useAuthContext()
   return (
     <Popover className="relative flex">
       <PopoverButton
@@ -74,11 +74,11 @@ export function Profile() {
                     className="text-base font-medium text-gray-700 hover:text-primary-600 focus:text-primary-600 dark:text-dark-100 dark:hover:text-primary-400 dark:focus:text-primary-400"
                     to="/settings/general"
                   >
-                    Travis Fuller
+                    {user?.first_name}
                   </Link>
 
                   <p className="mt-0.5 text-xs text-gray-400 dark:text-dark-300">
-                    Product Designer
+                    {user?.role}
                   </p>
                 </div>
               </div>

@@ -1,20 +1,60 @@
-import { useState } from 'react';
+// AdminDashboard.tsx
+
+import { useState, useEffect } from 'react';
 import { 
   ShieldCheck, 
   TrendingUp, 
-  // BarChart2, 
-  // Calendar, 
   Navigation, 
   Activity, 
-  Zap 
+  Zap,
+  Users, 
+  Car, 
+  Clock, 
+  DollarSign, 
+  MapPin, 
+  Smartphone, 
+  Package,  
+  BatteryCharging, 
+  // AlertTriangle,
+  FileText, 
+  MessageSquare, 
+  // UserCheck,
+  X
 } from 'lucide-react';
-import Chart from 'react-apexcharts'; // ✅ Remplacé next/dynamic
-import { adminStats, platformStats, recentActivities, keyMetrics, alerts } from './data';
+import Chart from 'react-apexcharts';
+import axios from 'axios';
 
 const AdminDashboard = () => {
-  // const [timeRange, setTimeRange] = useState('monthly');
   const [statView, setStatView] = useState('overview');
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await axios.get('https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/dashboard/admin-stats');
+        setStats(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return   <div className="flex justify-center items-center h-64">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#F4C509]"></div>
+  </div>
+  }
+
+  if (!stats) {
+    return <div className="flex justify-center items-center h-screen">Erreur lors du chargement des données</div>;
+  }
+
+  // Préparation des données pour les graphiques
   const ridesChartOptions = {
     chart: { type: 'area', height: 350, toolbar: { show: false } },
     colors: ['#10B981'],
@@ -49,29 +89,165 @@ const AdminDashboard = () => {
 
   const vehicleDistributionOptions = {
     chart: { type: 'donut', height: 350 },
-    labels: ['Moto-taxis', 'Trycycles'],
-    colors: ['#10B981', '#3B82F6', '#6366F1'],
+    labels: stats.vehicleDistribution.map((v) => 
+      v.type === 'moto' ? 'Moto-taxis' : 'Trycycles'),
+    colors: ['#10B981', '#3B82F6'],
     legend: { position: 'bottom' },
     responsive: [{ breakpoint: 480, options: { chart: { width: 200 } } }]
   };
 
-  const vehicleDistributionSeries = [65, 35];
+  const vehicleDistributionSeries = stats.vehicleDistribution.map((v) => v.count);
+
+  // Formatage des statistiques principales
+  const adminStats = [
+    {
+      title: "Utilisateurs actifs",
+      value: stats.mainStats.activeUsers,
+      change: "+8%", // À calculer si vous avez les données historiques
+      icon: Users,
+      color: "bg-blue-100 text-blue-800",
+      trend: 'up',
+      detail: "Total plateforme"
+    },
+    {
+      title: "Courses aujourd'hui",
+      value: stats.mainStats.todayRides,
+      change: "+12%", // À calculer
+      icon: Car,
+      color: "bg-green-100 text-green-800",
+      trend: 'up',
+      detail: "vs hier"
+    },
+    {
+      title: "Revenu journalier course",
+      value: `${stats.mainStats.todayRevenue.toLocaleString()} FCFA`,
+      change: "+18%", // À calculer
+      icon: DollarSign,
+      color: "bg-purple-100 text-purple-800",
+      trend: 'up',
+      detail: `Moyenne: ${(stats.mainStats.todayRevenue / stats.mainStats.todayRides).toLocaleString()} FCFA`
+    },
+    {
+      title: "Temps moyen course",
+      value: `${Math.round(stats.mainStats.avgRideDuration)} min`,
+      change: "-5%", // À calculer
+      icon: Clock,
+      color: "bg-amber-100 text-amber-800",
+      trend: 'down',
+      detail: "Efficacité améliorée"
+    },
+    {
+      title: "Kilomètres moyens course",
+      value: `${stats.mainStats.avgDistance.toFixed(1)} km`,
+      change: "+3%", // À calculer
+      icon: Navigation,
+      color: "bg-indigo-100 text-indigo-800",
+      trend: 'up',
+      detail: "Par course"
+    },
+    {
+      title: "Kilomètres totaux course",
+      value: `${Math.round(stats.mainStats.totalDistance)} km`,
+      change: "+22%", // À calculer
+      icon: TrendingUp,
+      color: "bg-cyan-100 text-cyan-800",
+      trend: 'up',
+      detail: "Ce mois"
+    },
+    {
+      title: "Temps total course",
+      value: `${Math.round(stats.mainStats.totalDuration / 60)} h`,
+      change: "+15%", // À calculer
+      icon: Clock,
+      color: "bg-orange-100 text-orange-800",
+      trend: 'up',
+      detail: "Temps de conduite"
+    },
+    {
+      title: "Taux d'occupation",
+      value: `${stats.mainStats.occupationRate}%`,
+      change: "+7%", // À calculer
+      icon: BatteryCharging,
+      color: "bg-emerald-100 text-emerald-800",
+      trend: 'up',
+      detail: "Utilisation d'engin motorisé"
+    }
+  ];
+
+  const platformStats = [
+    {
+      title: "Couverture zones",
+      value: "85%",
+      icon: MapPin,
+      color: "bg-blue-100 text-blue-800",
+      progress: 85,
+      progressColor: "bg-blue-600",
+      description: "Douala et périphérie"
+    },
+    {
+      title: "App mobile",
+      value: "72%",
+      icon: Smartphone,
+      color: "bg-purple-100 text-purple-800",
+      progress: 72,
+      progressColor: "bg-purple-600",
+      description: "Utilisation via mobile"
+    },
+    {
+      title: "Satisfaction",
+      value: "4.8/5",
+      icon: ShieldCheck,
+      color: "bg-green-100 text-green-800",
+      progress: 96,
+      progressColor: "bg-green-600",
+      description: "Basé sur 1,024 avis"
+    }
+  ];
+
+  const keyMetrics = [
+    {
+      title: "Taux d'annulation",
+      value: `${stats.mainStats.cancellationRate.toFixed(1)}%`,
+      icon: X,
+      color: "bg-red-100 text-red-600",
+      progress: stats.mainStats.cancellationRate,
+      progressColor: "bg-red-600",
+      description: "Mois en cours"
+    },
+    {
+      title: "Chauffeurs actifs",
+      value: stats.mainStats.activeDrivers,
+      icon: Users,
+      color: "bg-blue-100 text-blue-600",
+      progress: (stats.mainStats.activeDrivers / stats.mainStats.activeUsers) * 100,
+      progressColor: "bg-blue-600",
+      description: "Total chauffeurs"
+    },
+    {
+      title: "Courses livraison",
+      value: `${stats.mainStats.deliveryRate.toFixed(1)}%`,
+      icon: Package,
+      color: "bg-purple-100 text-purple-600",
+      progress: stats.mainStats.deliveryRate,
+      progressColor: "bg-purple-600",
+      description: "Part des livraisons"
+    },
+    {
+      title: "Retours clients",
+      value: "24h",
+      icon: Clock,
+      color: "bg-cyan-100 text-cyan-600",
+      progress: 85,
+      progressColor: "bg-cyan-600",
+      description: "Temps moyen de réponse"
+    }
+  ];
 
   return (
     <div className="container mx-auto px-4 py-6">
       {/* En-tête */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Tableau de bord administrateur</h1>
-        {/* <div className="flex space-x-2 mt-4 md:mt-0">
-          <button onClick={() => setTimeRange('monthly')} className={`px-3 py-1 rounded-md text-sm flex items-center ${timeRange === 'monthly' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-            <Calendar className="h-4 w-4 mr-1" />
-            Mensuel
-          </button>
-          <button onClick={() => setTimeRange('global')} className={`px-3 py-1 rounded-md text-sm flex items-center ${timeRange === 'global' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>
-            <BarChart2 className="h-4 w-4 mr-1" />
-            Global
-          </button>
-        </div> */}
       </div>
 
       {/* Statistiques principales */}
@@ -172,16 +348,19 @@ const AdminDashboard = () => {
             <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">Live</span>
           </div>
           <div className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-            {recentActivities.map((activity) => (
+            {stats.recentActivities.map((activity) => (
               <div key={activity.id} className="p-4 hover:bg-gray-50">
                 <div className="flex items-start space-x-3">
-                  <div className={`p-2 rounded-full ${activity.color}`}>
-                    <activity.icon className="h-4 w-4" />
+                  <div className={`p-2 rounded-full ${activity.type === 'Livraison' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                    {activity.type === 'Livraison' ? <Package className="h-4 w-4" /> : <Car className="h-4 w-4" />}
                   </div>
                   <div>
                     <p className="font-medium text-sm">{activity.type}</p>
                     <p className="text-sm text-gray-600">{activity.description}</p>
                     <p className="text-xs text-gray-400 mt-1">{activity.time}</p>
+                    {activity.amount && (
+                      <p className="text-xs text-green-600 mt-1">{activity.amount.toLocaleString()} FCFA</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -225,22 +404,31 @@ const AdminDashboard = () => {
           Alertes et actions prioritaires
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {alerts.map((alert, index) => (
-            <div key={index} className={`border-l-4 ${alert.borderColor} ${alert.bgColor} p-4 rounded-r`}>
+          {stats.alerts.map((alert, index) => (
+            <div key={index} className={`border-l-4 ${index === 0 ? 'border-yellow-400 bg-yellow-50' : 'border-blue-400 bg-blue-50'} p-4 rounded-r`}>
               <div className="flex items-start">
-                <div className={`p-1.5 rounded-full ${alert.iconColor} mr-3`}>
-                  <alert.icon className="h-4 w-4" />
+                <div className={`p-1.5 rounded-full ${index === 0 ? 'bg-yellow-100 text-yellow-600' : 'bg-blue-100 text-blue-600'} mr-3`}>
+                  {index === 0 ? <FileText className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}
                 </div>
                 <div>
                   <p className="font-medium">{alert.title}</p>
                   <p className="text-sm text-gray-600 mt-1">{alert.description}</p>
-                  {/* <button className="text-xs mt-2 text-white bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded">
-                    {alert.action}
-                  </button> */}
                 </div>
               </div>
             </div>
           ))}
+          {/* Ajout d'une alerte statique pour la mise à jour */}
+          <div className="border-l-4 border-green-400 bg-green-50 p-4 rounded-r">
+            <div className="flex items-start">
+              <div className="p-1.5 rounded-full bg-green-100 text-green-600 mr-3">
+                <FileText className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="font-medium">Mise à jour disponible</p>
+                <p className="text-sm text-gray-600 mt-1">Version 2.1.0 - Corrections de bugs</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

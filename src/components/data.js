@@ -212,4 +212,4 @@ export const alerts = [
     iconColor: "bg-green-100 text-green-600",
     action: "Mettre à jour"
   }
-];
+]

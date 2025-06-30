@@ -1,13 +1,14 @@
 // Import Dependencies
 import { useEffect, useReducer } from "react";
-import isObject from "lodash/isObject";
 import PropTypes from "prop-types";
-import isString from "lodash/isString";
+// import isString from "lodash/isString";
 
 // Local Imports
 import axios from "utils/axios";
 import { isTokenValid, setSession } from "utils/jwt";
 import { AuthContext } from "./context";
+import { toast } from "react-toastify";
+// import { isObject } from "lodash";
 
 // ----------------------------------------------------------------------
 
@@ -117,24 +118,31 @@ export function AuthProvider({ children }) {
     init();
   }, []);
 
-  const login = async ({ username, password }) => {
-    dispatch({
-      type: "LOGIN_REQUEST",
-    });
-
+  const login = async ({ phone, password }) => {
     try {
       const response = await axios.post("/login", {
-        username,
+        phone,
         password,
       });
 
-      const { authToken, user } = response.data;
+      const { token, user } = response.data;
 
-      if (!isString(authToken) && !isObject(user)) {
-        throw new Error("Response is not vallid");
+
+       toast.success(`Bienvenue ${user?.first_name || "Utilisateur"} ! Vous êtes connecté.`, {
+                position: "top-right",
+                autoClose: 4000,
+                hideProgressBar: false,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+            });
+
+      if (!token || !user) {
+        throw new Error("Response is not valid");
       }
 
-      setSession(authToken);
+      setSession({ token, user });
 
       dispatch({
         type: "LOGIN_SUCCESS",
@@ -146,7 +154,7 @@ export function AuthProvider({ children }) {
       dispatch({
         type: "LOGIN_ERROR",
         payload: {
-          errorMessage: err,
+          errorMessage: err.response?.data?.message || err.message,
         },
       });
     }
@@ -154,6 +162,17 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     setSession(null);
+
+    toast.info("Vous vous êtes déconnecté avec succès.", {
+    position: "top-right",
+    autoClose: 4000,
+    hideProgressBar: false,
+    closeOnClick: true,
+    pauseOnHover: true,
+    draggable: true,
+    progress: undefined,
+});
+
     dispatch({ type: "LOGOUT" });
   };
 

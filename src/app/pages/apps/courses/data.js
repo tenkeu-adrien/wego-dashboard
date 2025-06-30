@@ -1,4 +1,4 @@
-import { Clock, Check, Truck, X, Smartphone, Wallet, WifiPen } from "lucide-react";
+import { Clock, Check, Truck, X, Smartphone, WifiPen ,especes  } from "lucide-react";
 
 export const orderStatusOptions = [
   {
@@ -32,7 +32,7 @@ export const paymentMethodOptions = [
     value: 'cash',
     label: 'Espèces',
     color: 'bg-green-100 text-green-800',
-    icon: Wallet
+    icon: especes
   },
   {
     value: 'orange_money',

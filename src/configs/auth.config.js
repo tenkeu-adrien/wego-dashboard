@@ -3,4 +3,4 @@
  * https://github.com/pinia-studio/jwt-api-node
 **/
 
-export const JWT_HOST_API = "https://jwt-api-node.vercel.app";
+export const JWT_HOST_API = "http://localhost:3333/api/v1"

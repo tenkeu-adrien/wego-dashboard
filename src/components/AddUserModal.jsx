@@ -1,186 +1,495 @@
-// Import Dependencies
 import {
-    Dialog,
-    DialogPanel,
-    DialogTitle,
-    Transition,
-    TransitionChild,
-  } from "@headlessui/react";
-  import { XMarkIcon, UserPlusIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
-  import { Fragment, useRef, useState } from "react";
-  
-  // Local Imports
-  import {  Button, Input, Select, } from "components/ui";
-  import { useDisclosure } from "hooks";
-  import { User, Phone, Mail, MapPin} from 'lucide-react';
-  
-  // ----------------------------------------------------------------------
-  
-  export function AddUserModal() {
-    const [isOpen, { open, close }] = useDisclosure(false);
-    const [formData, setFormData] = useState({
-      name: '',
-      email: '',
-      phone: '',
-      ville: '',
-      role: 'client',
-      avatar: ''
+  Dialog,
+  DialogPanel,
+  DialogTitle,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { XMarkIcon, UserPlusIcon } from "@heroicons/react/24/outline";
+import { Fragment, useRef, useState, useEffect } from "react";
+import { Button } from "components/ui";
+import { useDisclosure } from "hooks";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import axios from "axios";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { app } from "./../firebase.config";
+import { useFirebaseUpload } from "hooks/useFirebaseUpload";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Initialisation de Firebase Storage
+const storage = getStorage(app);
+
+// Schéma de validation
+const userSchema = yup.object().shape({
+  firstName: yup.string().required("Le nom est requis"),
+  phone: yup
+    .string()
+    .required("Le téléphone est requis")
+    .matches(/^[0-9]+$/, "Doit contenir uniquement des chiffres")
+    .min(8, "Le téléphone doit contenir au moins 8 chiffres"),
+  role: yup
+    .string()
+    .required("Le rôle est requis")
+    .oneOf(["client", "driver", "admin"], "Rôle invalide"),
+  vehiculeType: yup.string().when("role", {
+    is: (val) => val === "driver",
+    then: (schema) => schema.required("Le type de véhicule est requis"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  matricule: yup.string().when("role", {
+    is: (val) => val === "driver",
+    then: (schema) => schema.required("La matricule est requise"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  avatar: yup.mixed().when("role", {
+    is: (val) => val === "driver",
+    then: (schema) => schema.required("L'avatar est requis"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  jointe: yup.mixed().when("role", {
+    is: (val) => val === "driver",
+    then: (schema) => schema.required("Le fichier est requis"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+  driverType: yup.string().when("role", {
+    is: (val) => val === "driver",
+    then: (schema) => schema.required("Le type de chauffeur est requis"),
+    otherwise: (schema) => schema.nullable(),
+  }),
+});
+
+export function AddUserModal({ fetchUsers, API_URL }) {
+  const [isOpen, { open, close }] = useDisclosure(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const saveRef = useRef(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    watch,
+    setValue,
+  } = useForm({
+    mode: "onTouched",
+    resolver: yupResolver(userSchema),
+    defaultValues: {
+      firstName: "",
+      phone: "",
+      role: "client",
+      vehiculeType: "",
+      matricule: "",
+      avatar: null,
+      jointe: null,
+      driverType: "",
+    },
+  });
+  const { uploadFile } = useFirebaseUpload();
+  const selectedRole = watch("role");
+  const avatarFile = watch("avatar");
+
+  // Effet pour gérer la prévisualisation de l'avatar
+  useEffect(() => {
+    if (avatarFile && avatarFile.length > 0) {
+      const file = avatarFile[0];
+      const reader = new FileReader();
+      
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result );
+      };
+      
+      reader.readAsDataURL(file);
+    } else {
+      setAvatarPreview(null);
+    }
+  }, [avatarFile]);
+
+  const showSuccessToast = () => {
+    toast.success('Utilisateur créé avec succès!', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
     });
-  
-    const saveRef = useRef(null);
-  
-    const handleInputChange = (e) => {
-      const { name, value } = e.target;
-      setFormData(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    };
-  
-    const handleSubmit = () => {
-      console.log('User added:', formData);
-      // Ajoutez ici la logique pour sauvegarder l'utilisateur
+  };
+
+  const handleAddUser = async (userData) => {
+    setError(null);
+    
+    try {
+      let avatarUrl = null;
+      let jointeUrl = null;
+
+      // Upload des fichiers si c'est un chauffeur
+      if (userData.role === 'driver') {
+        if (userData.avatar && userData.avatar.length > 0) {
+          const avatarFile = userData.avatar[0];
+          const avatarRef = ref(storage, `avatars/${Date.now()}_${avatarFile.name}`);
+          await uploadBytes(avatarRef, avatarFile);
+          avatarUrl = await getDownloadURL(avatarRef);
+        }
+
+        if (userData.jointe && userData.jointe.length > 0) {
+          const jointeFile = userData.jointe[0];
+          const jointeRef = ref(storage, `documents/${Date.now()}_${jointeFile.name}`);
+          await uploadBytes(jointeRef, jointeFile);
+          jointeUrl = await getDownloadURL(jointeRef);
+        }
+      }
+
+      // Préparation des données pour l'API AdonisJS
+      const payload = {
+        firstName: userData.firstName,
+        phone: userData.phone,
+        role: userData.role,
+        password: userData.matricule, // Utilisation de la matricule comme mot de passe par défaut
+        ...(userData.role === 'driver' && {
+          vehiculeType: userData.vehiculeType,
+          matricule: userData.matricule,
+          avatar: avatarUrl,
+          jointe: jointeUrl,
+          driverType: userData.driverType
+        })
+      };
+
+      const response = await axios.post(`${API_URL}/register`, payload);
+      
+      fetchUsers();
+      reset();
       close();
-    };
+      showSuccessToast();
+      return response.data;
+    } catch (err) {
+      console.error('Error adding user:', err);
+      setError(err.response?.data?.message || err.message);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onSubmit = async (data) => {
+    try {
+      // Upload des fichiers si c'est un chauffeur
+      setIsLoading(true);
+      if (data.role === 'driver') {
+        if (data.avatar && data.avatar.length > 0) {
+          data.avatar = await uploadFile(data.avatar[0], 'avatars');
+        }
+        if (data.jointe && data.jointe.length > 0) {
+          data.jointe = await uploadFile(data.jointe[0], 'documents');
+        }
+      }
   
-    return (
-      <>
-        <Button 
-          onClick={open} 
-          className="h-10 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center justify-center gap-2"
+      await handleAddUser(data);
+    } catch (error) {
+      console.error("Failed to add user:", error);
+    }
+  };
+
+  const handleAvatarChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setValue("avatar", [file]);
+    }
+  };
+
+  return (
+    <>
+      <Button
+        onClick={open}
+        className="h-10 px-4 py-2"
+        style={{ backgroundColor: "#F4C509", color: "#06A257" }}
+      >
+        <UserPlusIcon className="w-5 h-5" />
+        <span>Ajouter un utilisateur</span>
+      </Button>
+
+      <Transition appear show={isOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-4 py-6 sm:px-5"
+          onClose={close}
+          initialFocus={saveRef}
         >
-          <UserPlusIcon className="w-5 h-5" />
-          <span>Ajouter un utilisateur</span>
-        </Button>
-  
-        <Transition appear show={isOpen} as={Fragment}>
-          <Dialog
-            as="div"
-            className="fixed inset-0 z-[100] flex flex-col items-center justify-center overflow-hidden px-4 py-6 sm:px-5"
-            onClose={close}
-            initialFocus={saveRef}
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="absolute inset-0 bg-gray-900/50 backdrop-blur transition-opacity dark:bg-black/30" />
-            </TransitionChild>
-  
-            <TransitionChild
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0 scale-95"
-              enterTo="opacity-100 scale-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100 scale-100"
-              leaveTo="opacity-0 scale-95"
-            >
-              <DialogPanel className="relative flex w-full max-w-2xl origin-top flex-col overflow-hidden rounded-lg bg-white transition-all duration-300 dark:bg-dark-700">
-                <div className="flex items-center justify-between rounded-t-lg bg-green-600 px-4 py-3 dark:bg-green-700 sm:px-5">
-                  <DialogTitle
-                    as="h3"
-                    className="text-base font-medium text-white"
-                  >
-                    <div className="flex items-center gap-2">
-                      <UserPlusIcon className="h-5 w-5" />
-                      <span>Ajouter un nouvel utilisateur</span>
-                    </div>
-                  </DialogTitle>
-                  <Button
-                    onClick={close}
-                    variant="flat"
-                    isIcon
-                    className="size-7 rounded-full bg-transparent hover:bg-green-700 ltr:-mr-1.5 rtl:-ml-1.5"
-                  >
-                    <XMarkIcon className="size-4.5 text-white" />
-                  </Button>
-                </div>
-  
-                <div className="flex flex-col overflow-y-auto px-4 py-4 sm:px-5">
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <Input
-                      name="name"
-                      placeholder="Nom complet"
-                      label="Nom"
-                      value={formData.name}
-                      onChange={handleInputChange}
-                      icon={<User className="h-4 w-4 text-gray-400" />}
-                    />
-                    <Input
-                      name="email"
-                      type="email"
-                      placeholder="Email"
-                      label="Email"
-                      value={formData.email}
-                      onChange={handleInputChange}
-                      icon={<Mail className="h-4 w-4 text-gray-400" />}
-                    />
-                    <Input
-                      name="phone"
-                      placeholder="Téléphone"
-                      label="Téléphone"
-                      value={formData.phone}
-                      onChange={handleInputChange}
-                      icon={<Phone className="h-4 w-4 text-gray-400" />}
-                    />
-                    <Input
-                      name="ville"
-                      placeholder="Ville"
-                      label="Ville"
-                      value={formData.ville}
-                      onChange={handleInputChange}
-                      icon={<MapPin className="h-4 w-4 text-gray-400" />}
-                    />
-                    <Select 
-                      name="role"
-                      label="Rôle"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="col-span-1"
-                    >
-                      <option value="moto-taxi">Moto-taxi</option>
-                      <option value="trycycle">Trycycle</option>
-                    </Select>
-                    <Input
-                      name="avatar"
-                      placeholder="URL de l'avatar"
-                      label="Avatar (URL)"
-                      value={formData.avatar}
-                      onChange={handleInputChange}
-                      className="col-span-1"
-                    />
+            <div className="absolute inset-0 bg-gray-900/50 backdrop-blur dark:bg-black/30" />
+          </TransitionChild>
+
+          <TransitionChild
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0 scale-95"
+            enterTo="opacity-100 scale-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100 scale-100"
+            leaveTo="opacity-0 scale-95"
+          >
+            <DialogPanel className="relative w-full max-w-3xl overflow-hidden rounded-lg bg-white dark:bg-dark-700">
+              <div
+                className="flex items-center justify-between px-4 py-3 sm:px-5"
+                style={{ backgroundColor: "#F4C509" }}
+              >
+                <DialogTitle
+                  as="h3"
+                  className="text-base font-medium"
+                  style={{ color: "#06A257" }}
+                >
+                  <div className="flex items-center gap-2">
+                    <UserPlusIcon className="h-5 w-5" />
+                    <span>Ajouter un nouvel utilisateur</span>
                   </div>
-                  
-                  <div className="mt-6 flex justify-end space-x-3 rtl:space-x-reverse">
+                </DialogTitle>
+                <Button
+                  onClick={close}
+                  variant="flat"
+                  isIcon
+                  className="size-7 rounded-full bg-transparent hover:bg-opacity-90"
+                  style={{ backgroundColor: "rgba(0,0,0,0.1)" }}
+                >
+                  <XMarkIcon className="size-4.5" style={{ color: "#06A257" }} />
+                </Button>
+              </div>
+
+              <div className="flex flex-col px-4 py-6 sm:px-5">
+                {error && (
+                  <div className="mb-4 rounded-md bg-red-50 p-4">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+                <form
+                  onSubmit={handleSubmit(onSubmit)}
+                  className="grid grid-cols-1 gap-6 md:grid-cols-2"
+                >
+                  {/* Nom */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Nom
+                    </label>
+                    <input
+                      type="text"
+                      {...register("firstName")}
+                      placeholder="Nom complet"
+                      className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                        errors.firstName ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.firstName && (
+                      <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
+                    )}
+                  </div>
+
+                  {/* Téléphone */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Téléphone
+                    </label>
+                    <input
+                      type="text"
+                      {...register("phone")}
+                      placeholder="Téléphone"
+                      className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                        errors.phone ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.phone && (
+                      <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+                    )}
+                  </div>
+
+                  {/* Rôle */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Rôle
+                    </label>
+                    <select
+                      {...register("role")}
+                      className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                        errors.role ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      <option value="client">Client</option>
+                      <option value="driver">Chauffeur</option>
+                      <option value="admin">Admin</option>
+                    </select>
+                    {errors.role && (
+                      <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
+                    )}
+                  </div>
+
+                  {/* Driver-specific fields */}
+                  {selectedRole === "driver" && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Type de véhicule
+                        </label>
+                        <select
+                          {...register("vehiculeType")}
+                          className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                            errors.vehiculeType ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          <option value="">Sélectionnez un type</option>
+                          <option value="moto-taxi">Moto-taxi</option>
+                          <option value="trycycle">Trycycle</option>
+                        </select>
+                        {errors.vehiculeType && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.vehiculeType.message}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Matricule
+                        </label>
+                        <input
+                          type="text"
+                          {...register("matricule")}
+                          placeholder="Matricule du véhicule"
+                          className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                            errors.matricule ? "border-red-500" : "border-gray-300"
+                          }`}
+                        />
+                        {errors.matricule && (
+                          <p className="mt-1 text-sm text-red-600">{errors.matricule.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Avatar (photo)
+                        </label>
+                        <div className="mt-1 flex items-center gap-4">
+                          {avatarPreview && (
+                            <div className="relative">
+                              <img
+                                src={avatarPreview}
+                                alt="Preview"
+                                className="h-16 w-16 rounded-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAvatarPreview(null);
+                                  setValue("avatar", null);
+                                }}
+                                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white"
+                              >
+                                <XMarkIcon className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+                          <label className="cursor-pointer">
+                            <span className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm hover:bg-gray-50">
+                              Choisir une photo
+                            </span>
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={handleAvatarChange}
+                            />
+                          </label>
+                        </div>
+                        {errors.avatar && (
+                          <p className="mt-1 text-sm text-red-600">{errors.avatar.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Pièce jointe (CNI, Passeport)
+                        </label>
+                        <input
+                          type="file"
+                          accept=".jpg,.jpeg,.png,.pdf"
+                          {...register("jointe")}
+                          className="mt-1 w-full text-sm"
+                        />
+                        {errors.jointe && (
+                          <p className="mt-1 text-sm text-red-600">{errors.jointe.message}</p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Type de chauffeur
+                        </label>
+                        <select
+                          {...register("driverType")}
+                          className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+                            errors.driverType ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          <option value="">Sélectionnez un type</option>
+                          <option value="employe">Employé</option>
+                          <option value="partenaire">Partenaire</option>
+                        </select>
+                        {errors.driverType && (
+                          <p className="mt-1 text-sm text-red-600">{errors.driverType.message}</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+
+                  {/* Boutons */}
+                  <div className="col-span-2 mt-4 flex justify-end space-x-3 rtl:space-x-reverse">
                     <Button
+                      type="button"
                       onClick={close}
                       variant="outlined"
-                      className="min-w-[7rem] rounded-full flex items-center gap-2"
+                      className="min-w-[7rem] rounded-full"
                     >
-                      <ArrowPathIcon className="h-4 w-4" />
                       Annuler
                     </Button>
                     <Button
-                      onClick={handleSubmit}
-                      color="primary"
+                      type="submit"
                       ref={saveRef}
-                      className="min-w-[7rem] rounded-full bg-green-600 hover:bg-green-700 flex items-center gap-2"
+                      className="min-w-[7rem] rounded-full"
+                      style={{ backgroundColor: "#F4C509", color: "#06A257" }}
+                      disabled={isLoading}
                     >
-                      <UserPlusIcon className="h-4 w-4" />
-                      Enregistrer
+                      {isLoading ? (
+                        <div className="flex items-center justify-center">
+                          <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          En cours...
+                        </div>
+                      ) : (
+                        <>
+                          <UserPlusIcon className="h-4 w-4" />
+                          Enregistrer
+                        </>
+                      )}
                     </Button>
                   </div>
-                </div>
-              </DialogPanel>
-            </TransitionChild>
-          </Dialog>
-        </Transition>
-      </>
-    );
-  }
+                </form>
+              </div>
+            </DialogPanel>
+          </TransitionChild>
+        </Dialog>
+      </Transition>
+    </>
+  );
+}

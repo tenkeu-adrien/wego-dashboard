@@ -8,7 +8,7 @@ export function SplashScreen() {
   return (
     <div className="fixed grid h-full w-full place-content-center">
       {/* <Logo  /> */}
-      <img src="/logo1.png"  alt="logo" className="size-65"/>
+      <img src="/logo1.png"  alt="logo" className="size-25" width={500} height={500}/>
       <Progress
         color="success"
         isIndeterminate

@@ -8,6 +8,7 @@ import { LocaleProvider } from "app/contexts/locale/Provider";
 import { SidebarProvider } from "app/contexts/sidebar/Provider";
 import { ThemeProvider } from "app/contexts/theme/Provider";
 import router from "app/router/router";
+import { ToastContainer } from "react-toastify";
 
 // ----------------------------------------------------------------------
 
@@ -15,6 +16,7 @@ function App() {
   return (
     <AuthProvider>
       <ThemeProvider>
+        <ToastContainer />
         <LocaleProvider>
           <BreakpointProvider>
             <SidebarProvider>
