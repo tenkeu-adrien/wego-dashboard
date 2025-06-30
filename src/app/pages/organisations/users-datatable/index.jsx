@@ -635,7 +635,7 @@ console.log("response users" ,response)
                         </p>
                       </div>
 
-                      {selectedUser.role === 'driver' && selectedUser.vehiculeType && (
+                      {selectedUser.role == 'driver' && selectedUser.vehiculeType && (
                         <div>
                           <p className="text-sm text-gray-500">Type de véhicule</p>
                           <p className="mt-1 text-sm font-medium text-gray-900">
@@ -644,7 +644,7 @@ console.log("response users" ,response)
                         </div>
                       )}
                       
-                      {selectedUser.role === 'client' && activePromos[selectedUser.id] && (
+                      {selectedUser.role == 'client' && activePromos[selectedUser.id] && (
                         <div className="pt-4 border-t">
                           <h4 className="font-medium text-gray-900 mb-2">Promotion active</h4>
                           <div className="bg-green-50 p-4 rounded-lg">
