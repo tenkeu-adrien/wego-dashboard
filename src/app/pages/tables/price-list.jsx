@@ -13,7 +13,7 @@ import { Page } from "components/shared/Page";
 
 export default function PriceList4() {
   return (
-    <Page title="Price List v4">
+    <Page title="Gestion des litiges">
      <LitigesManagement />
     </Page>
   );

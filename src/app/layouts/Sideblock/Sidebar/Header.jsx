@@ -16,7 +16,7 @@ export function Header() {
       <div className=" ">
         <Link to="/" className="">
           {/* <Logo  /> */}
-          <img  alt="logo" src="/logo.png"  className=" text-primary-600 dark:text-primary-400  h-[200px] w-[300px]"/>
+          <img  alt="Wego" src="/logo.png"  className=" text-primary-600 dark:text-primary-400  h-[200px] w-[300px]"/>
         </Link>
        
         {/* <span className="h-5 w-auto text-gray-800  text-xl dark:text-dark-50 font-bold" > Zégo</span> */}
