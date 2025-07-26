@@ -33,7 +33,7 @@ const userSchema = yup.object().shape({
   role: yup
     .string()
     .required("Le rôle est requis")
-    .oneOf(["client", "driver", "admin"], "Rôle invalide"),
+    .oneOf(["client", "driver", "manager"], "Rôle invalide"),
   vehiculeType: yup.string().when("role", {
     is: (val) => val === "driver",
     then: (schema) => schema.required("Le type de véhicule est requis"),
@@ -67,6 +67,19 @@ export function AddUserModal({ fetchUsers, API_URL }) {
   const [error, setError] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const saveRef = useRef(null);
+
+
+  const countryCodes = [
+  { code: "CM", name: "Cameroun", dialCode: "+237", flag: "🇨🇲" },
+  { code: "SN", name: "Sénégal", dialCode: "+221", flag: "🇸🇳" },
+  { code: "CI", name: "Côte d'Ivoire", dialCode: "+225", flag: "🇨🇮" },
+  { code: "NG", name: "Nigeria", dialCode: "+234", flag: "🇳🇬" },
+  { code: "GA", name: "Gabon", dialCode: "+241", flag: "🇬🇦" },
+];
+const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
+
+
+
 
   const {
     register,
@@ -145,10 +158,11 @@ export function AddUserModal({ fetchUsers, API_URL }) {
         }
       }
 
+      
       // Préparation des données pour l'API AdonisJS
       const payload = {
         firstName: userData.firstName,
-        phone: userData.phone,
+        phone: selectedCode.dialCode + userData.phone.replace(/^0+/, ""), // Ajoute l'indicatif
         role: userData.role,
         password: userData.matricule, // Utilisation de la matricule comme mot de passe par défaut
         ...(userData.role === 'driver' && {
@@ -296,22 +310,39 @@ export function AddUserModal({ fetchUsers, API_URL }) {
                   </div>
 
                   {/* Téléphone */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                      Téléphone
-                    </label>
-                    <input
-                      type="text"
-                      {...register("phone")}
-                      placeholder="Téléphone"
-                      className={`mt-1 w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
-                        errors.phone ? "border-red-500" : "border-gray-300"
-                      }`}
-                    />
-                    {errors.phone && (
-                      <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
-                    )}
-                  </div>
+                 <div>
+  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+    Téléphone
+  </label>
+  <div className="mt-1 flex">
+    <select
+      value={selectedCode.dialCode}
+      onChange={(e) => {
+        const found = countryCodes.find(c => c.dialCode === e.target.value);
+        if (found) setSelectedCode(found);
+      }}
+      className="mr-2 rounded-md border px-2 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] bg-white"
+    >
+      {countryCodes.map((code) => (
+        <option key={code.code} value={code.dialCode}>
+          {code.flag} {code.dialCode}
+        </option>
+      ))}
+    </select>
+    <input
+      type="text"
+      {...register("phone")}
+      placeholder="Téléphone (ex: 6xxxxxxxx)"
+      className={`w-full rounded-md border px-3 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] ${
+        errors.phone ? "border-red-500" : "border-gray-300"
+      }`}
+    />
+  </div>
+  {errors.phone && (
+    <p className="mt-1 text-sm text-red-600">{errors.phone.message}</p>
+  )}
+</div>
+
 
                   {/* Rôle */}
                   <div>
@@ -326,7 +357,7 @@ export function AddUserModal({ fetchUsers, API_URL }) {
                     >
                       <option value="client">Client</option>
                       <option value="driver">Chauffeur</option>
-                      <option value="admin">Admin</option>
+                      <option value="manager">manager</option>
                     </select>
                     {errors.role && (
                       <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>

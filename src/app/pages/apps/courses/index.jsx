@@ -3,6 +3,8 @@ import { Eye, Trash, X, MapPin, Package, ChevronLeft, ChevronRight } from 'lucid
 import { PiMotorcycleBold } from 'react-icons/pi';
 import { RiBikeFill } from 'react-icons/ri';
 import axios from 'axios';
+import { useAuthContext } from 'app/contexts/auth/context';
+import { toast } from 'react-toastify';
 
 // Options pour les filtres
 const orderStatusOptions = [
@@ -33,7 +35,7 @@ const paymentTypeOptions = [
 const vehicleTypeOptions = [
   { value: 'all', label: 'Tous' },
   { value: 'moto-taxi', label: 'Moto-taxi' },
-  { value: 'trycycle', label: 'Trycycle' }
+  { value: 'tricycle', label: 'Trycycle' }
 ];
 
 const rideTypeOptions = [
@@ -52,12 +54,15 @@ const OrdersTable = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const {user } = useAuthContext();
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [orderToDelete, setOrderToDelete] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1'; 
+  const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1'
+  // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
+  // http://localhost:3333/api/v1
   const [meta, setMeta] = useState({
     total: 0,
     per_page: 8,
@@ -176,7 +181,7 @@ const OrdersTable = () => {
       // Nettoyer les paramètres undefined
       Object.keys(params).forEach(key => params[key] === undefined && delete params[key]);
 
-      const response = await axios.get(`${API_URL}/rides/history`, { params });
+      const response = await axios.get(`${API_URL}/rides/historyy`, { params });
       
       const transformedData = transformApiData(response.data.rides.data);
       setOrders(transformedData);
@@ -310,6 +315,9 @@ const OrdersTable = () => {
   };
   
   const confirmDelete = async () => {
+    // const userId = localStorage.getItem('userId');
+ 
+     if(user.role !== 'admin') return toast.info('Vous n\'avez pas le droit de supprimer une course');
     try {
       await axios.delete(`${API_URL}/rides/${orderToDelete.apiData.id}`);
       fetchOrders(); // Recharger les données après suppression
@@ -351,7 +359,7 @@ const OrdersTable = () => {
       
       {/* Filtres et recherche */}
       <div className="mb-6 bg-white p-4 rounded-lg shadow">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
             <select
@@ -486,7 +494,7 @@ const OrdersTable = () => {
               {filteredOrders.length > 0 ? (
                 filteredOrders.map((order) => (
                   <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{order.id}</td>
+                    <td className="px-3 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#</td>
                     <td className="px-3 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">{order.client}</div>
                       <div className="text-xs text-gray-500">{order.client_phone}</div>
@@ -496,7 +504,7 @@ const OrdersTable = () => {
                       <div className="flex items-center">
                         {getVehicleIcon(order.vehicle_type)}
                         <span className="ml-2 text-sm text-gray-900">
-                          {order.vehicle_type === 'moto-taxi' ? 'Moto-taxi' : 'Trycycle'}
+                          {order.vehicle_type === 'moto-taxi' ? 'Moto-taxi' : 'Tricycle'}
                         </span>
                       </div>
                     </td>

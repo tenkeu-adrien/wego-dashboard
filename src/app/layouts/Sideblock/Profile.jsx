@@ -38,7 +38,9 @@ const links = [
 ];
 
 export function Profile() {
-  const {logout , user} = useAuthContext()
+  const {logout , user, token} = useAuthContext()
+
+  console.log("user profile ",user  ,token)
   return (
     <Popover className="relative flex">
       <PopoverButton

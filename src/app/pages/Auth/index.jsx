@@ -47,7 +47,7 @@ export default function SignIn() {
 
   const onSubmit = (data) => {
       login({
-      phone: data.phone,
+   phone: `+237${data.phone}`,
       password: data.password,
     });
 

@@ -1,8 +1,49 @@
+import { useState, useEffect } from 'react';
 import Chart from 'react-apexcharts';
 import { PiMotorcycle } from 'react-icons/pi';
 import { RiBikeLine } from 'react-icons/ri';
+import axios from 'axios';
 
 const DriverPerformanceChart = () => {
+  const [series, setSeries] = useState([
+    {
+      name: "Moto-taxis",
+      data: Array(12).fill(0)
+    },
+    {
+      name: "Trycycles",
+      data: Array(12).fill(0)
+    }
+  ]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get('http://localhost:3333/api/v1/dashboard/driver-performance');
+        const { motoTaxi, tricycle } = response.data.data;
+
+        setSeries([
+          {
+            name: "Moto-taxis",
+            data: motoTaxi
+          },
+          {
+            name: "Trycycles",
+            data: tricycle
+          }
+        ]);
+      } catch (error) {
+        console.error('Error fetching driver performance data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
   const options = {
     chart: {
       type: 'bar',
@@ -38,22 +79,11 @@ const DriverPerformanceChart = () => {
         formatter: (val) => Math.floor(val),
       },
     },
-    colors: ["#7c3aed", "#10b981"],
+    colors: ["#F4C509", "#06A257"], // Jaune et Vert comme spécifié
     legend: {
       position: 'top',
     }
   };
-
-  const series = [
-    {
-      name: "Moto-taxis",
-      data: [65, 59, 80, 71, 76, 65, 87, 82, 73, 85, 90, 92]
-    },
-    {
-      name: "Trycycles",
-      data: [35, 31, 40, 29, 34, 35, 43, 38, 37, 45, 40, 38]
-    }
-  ];
 
   return (
     <div className="bg-white p-4 rounded-lg shadow h-[400px]">
@@ -61,21 +91,27 @@ const DriverPerformanceChart = () => {
         <h3 className="text-lg font-semibold">Performance des Chauffeurs</h3>
         <div className="flex space-x-2">
           <span className="flex items-center text-xs text-gray-500">
-            <PiMotorcycle className="mr-1 text-purple-600" />
+            <PiMotorcycle className="mr-1" style={{ color: '#F4C509' }} />
             Moto-taxis
           </span>
           <span className="flex items-center text-xs text-gray-500">
-            <RiBikeLine className="mr-1 text-green-500" />
+            <RiBikeLine className="mr-1" style={{ color: '#06A257' }} />
             Trycycles
           </span>
         </div>
       </div>
-      <Chart 
-        options={options} 
-        series={series} 
-        type="bar" 
-        height="90%"
-      />
+      {loading ? (
+        <div className="flex items-center justify-center h-full">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+        </div>
+      ) : (
+        <Chart 
+          options={options} 
+          series={series} 
+          type="bar" 
+          height="90%"
+        />
+      )}
     </div>
   );
 };

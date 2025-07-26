@@ -7,9 +7,10 @@ import { Page } from 'components/shared/Page';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useAuthContext } from 'app/contexts/auth/context';
 
 const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1';
-
+// https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
 const UsersTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -30,6 +31,7 @@ const UsersTable = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activePromos, setActivePromos] = useState({});
   const [isExporting, setIsExporting] = useState(false);
+  const {user } = useAuthContext();
   const usersPerPage = 8;
 
   const rolesOptions = [
@@ -197,6 +199,11 @@ console.log("response users" ,response)
   };
 
   const handleSuspendUser = async () => {
+    if(user?.role !== 'admin') return     toast.info(
+      userToSuspend.is_deleted 
+        ? `Vous n'avez pas le droit de réactiver ${userToSuspend.first_name}` 
+        : `Vous n'avez pas le droit de suspendre ${userToSuspend.first_name}`
+    );
     setIsSubmitting(true);
     try {
       await axios.patch(`${API_URL}/users/update/${userToSuspend.id}/`, {
@@ -268,6 +275,8 @@ console.log("response users" ,response)
   const handleAddPromo = async (promoData) => {
     setIsSubmitting(true);
     try {
+      console.log("userForPromo.id" ,userForPromo.id)
+      console.log("promo-data" ,promoData)
       await axios.post(`${API_URL}/users/${userForPromo.id}/promo-codes`, {
         code: promoData.code,
         discount: parseFloat(promoData.discount),

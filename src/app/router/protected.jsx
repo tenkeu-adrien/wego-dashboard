@@ -117,6 +117,12 @@ const protectedRoutes = {
               }),
             },
             {
+              path: "WegoFood",
+              lazy: async () => ({
+                Component: (await import("app/pages/apps/wegoFood")).default,
+              }),
+            },
+            {
               path: "rapports",
               lazy: async () => ({
                 Component: (await import("app/pages/apps/rapports")).default,

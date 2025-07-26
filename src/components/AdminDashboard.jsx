@@ -11,28 +11,75 @@ import {
   Car, 
   Clock, 
   DollarSign, 
-  MapPin, 
-  Smartphone, 
+  // MapPin, 
+  // Smartphone, 
   Package,  
   BatteryCharging, 
   // AlertTriangle,
   FileText, 
   MessageSquare, 
   // UserCheck,
-  X
+  X,
+  Download
 } from 'lucide-react';
 import Chart from 'react-apexcharts';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const AdminDashboard = () => {
   const [statView, setStatView] = useState('overview');
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [exportPeriod, setExportPeriod] = useState('month');
+  const [isExporting, setIsExporting] = useState(false);
+  console.log("stats response recentActivities" ,stats?.recentActivities)
+  const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1';
+  // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const response = await axios.get(`${API_URL}/export`, {
+        responseType: 'arraybuffer', // Utilisez arraybuffer au lieu de blob
+        headers: {
+          'Accept': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        }
+      });
+  
+      const blob = new Blob([response.data], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `dashboard_export_${new Date().toISOString().slice(0,10)}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      
+      // Nettoyage
+      setTimeout(() => {
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }, 100);
+      
+    } catch (err) {
+      console.error('Erreur exportation:', err);
+      toast.error("Échec de l'exportation. Veuillez réessayer.", {
+        position: "top-right",
+        autoClose: 5000,
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/dashboard/admin-stats');
+        // 
+        // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/dashboard/admin-stats
+        const response = await axios.get('http://localhost:3333/api/v1/dashboard/admin-stats');
         setStats(response.data);
         setLoading(false);
       } catch (error) {
@@ -174,35 +221,35 @@ const AdminDashboard = () => {
     }
   ];
 
-  const platformStats = [
-    {
-      title: "Couverture zones",
-      value: "85%",
-      icon: MapPin,
-      color: "bg-blue-100 text-blue-800",
-      progress: 85,
-      progressColor: "bg-blue-600",
-      description: "Douala et périphérie"
-    },
-    {
-      title: "App mobile",
-      value: "72%",
-      icon: Smartphone,
-      color: "bg-purple-100 text-purple-800",
-      progress: 72,
-      progressColor: "bg-purple-600",
-      description: "Utilisation via mobile"
-    },
-    {
-      title: "Satisfaction",
-      value: "4.8/5",
-      icon: ShieldCheck,
-      color: "bg-green-100 text-green-800",
-      progress: 96,
-      progressColor: "bg-green-600",
-      description: "Basé sur 1,024 avis"
-    }
-  ];
+  // const platformStats = [
+  //   {
+  //     title: "Couverture zones",
+  //     value: "85%",
+  //     icon: MapPin,
+  //     color: "bg-blue-100 text-blue-800",
+  //     progress: 85,
+  //     progressColor: "bg-blue-600",
+  //     description: "Douala et périphérie"
+  //   },
+  //   {
+  //     title: "App mobile",
+  //     value: "72%",
+  //     icon: Smartphone,
+  //     color: "bg-purple-100 text-purple-800",
+  //     progress: 72,
+  //     progressColor: "bg-purple-600",
+  //     description: "Utilisation via mobile"
+  //   },
+  //   {
+  //     title: "Satisfaction",
+  //     value: "4.8/5",
+  //     icon: ShieldCheck,
+  //     color: "bg-green-100 text-green-800",
+  //     progress: 96,
+  //     progressColor: "bg-green-600",
+  //     description: "Basé sur 1,024 avis"
+  //   }
+  // ];
 
   const keyMetrics = [
     {
@@ -246,9 +293,59 @@ const AdminDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-6">
       {/* En-tête */}
+   
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
         <h1 className="text-2xl font-bold">Tableau de bord administrateur</h1>
+        
+        <div className="flex items-center space-x-2 mt-4 md:mt-0">
+          <select
+            value={exportPeriod}
+            onChange={(e) => setExportPeriod(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F4C509]"
+          >
+            <option value="day">Aujourd&apos;hui</option>
+            <option value="week">Cette semaine</option>
+            <option value="month">Ce mois</option>
+            <option value="year">Cette année</option>
+          </select>
+          
+          <button
+            onClick={handleExport}
+            disabled={isExporting}
+            className="flex items-center bg-[#F4C509] hover:bg-[#e6b908] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+          >
+            {isExporting ? (
+              'Export en cours...'
+            ) : (
+              <>
+                <Download className="w-4 h-4 mr-2" />
+                Exporter
+              </>
+            )}
+          </button>
+        </div>
       </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
       {/* Statistiques principales */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -275,7 +372,7 @@ const AdminDashboard = () => {
       </div>
 
       {/* Plateforme stats */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {platformStats.map((stat, index) => (
           <div key={index} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center space-x-4">
@@ -295,7 +392,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         ))}
-      </div>
+      </div> */}
 
       {/* Performances */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

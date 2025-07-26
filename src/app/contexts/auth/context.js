@@ -4,7 +4,7 @@ import axios from "axios";
 import { isTokenValid, setSession } from "utils/jwt";
 
 const API_URL = "https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1";
-
+// https://wegoadmin-c5c82e2c5d80.herokuapp.com/
 export const [AuthContext, useAuthContext] = createSafeContext(
     "useAuthContext must be used within AuthProvider"
 );
@@ -30,6 +30,7 @@ export function AuthProvider({ children }) {
                                 }
                             });
                             const userData = response.data.user;
+                            console.log("userData", userData)
 
                             setToken(storedToken);
                             setUser(userData);

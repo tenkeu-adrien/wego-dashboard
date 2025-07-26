@@ -5,6 +5,7 @@ import BankBuildIcon from 'assets/nav-icons/people.svg?react';
 import BankBuildIco from 'assets/nav-icons/kanban.svg?react';
 import LicenseIcon from 'assets/nav-icons/license.svg?react';
 import LicenseIco from 'assets/nav-icons/steps.svg?react';
+import WegoFoodIcon from 'assets/nav-icons/widget.svg?react';
 import OrganizationsIco from 'assets/nav-icons/utility.svg?react';
 import { 
   NAV_TYPE_ROOT, 
@@ -72,6 +73,14 @@ export const dashboards = {
       title: 'Courses',
       transKey: 'nav.configuration.course',
       Icon: LicenseIco,
+    },
+    {
+      id: 'WegoFood',
+      path: path(ROOT_APPS, '/WegoFood'),
+      type: NAV_TYPE_ITEM,
+      title: 'WegoFood',
+      transKey: 'nav.configuration.WegoFood',
+      Icon: WegoFoodIcon,
     },
     {
       id: 'points',

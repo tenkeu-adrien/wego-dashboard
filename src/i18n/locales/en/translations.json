@@ -20,6 +20,7 @@
      
       "suivi":"Suivi des trajets" ,
       "course":"Courses"
+      
     },
 
     "settings": {
@@ -35,7 +36,8 @@
       "suivi":"Suivi des trajets" ,
       "point":"point" ,
       "rapport":"Rapport" ,
-      "course":"Courses"
+      "course":"Courses",
+      "WegoFood":"WegoFood"
     }
   }
 }

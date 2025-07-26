@@ -28,8 +28,8 @@ export default function Sales() {
   // };
   
 
-
-  const socket = io('https://wegoadmin-c5c82e2c5d80.herokuapp.com', {
+// https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
+  const socket = io('https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1', {
   transports: ['websocket'],
   // Ajoutez d'autres options si besoin (auth, etc)
 })
