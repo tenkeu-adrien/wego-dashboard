@@ -79,7 +79,7 @@ const AdminDashboard = () => {
       try {
         // 
         // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/dashboard/admin-stats
-        const response = await axios.get('http://localhost:3333/api/v1/dashboard/admin-stats');
+        const response = await axios.get(`${API_URL}/dashboard/admin-stats`);
         setStats(response.data);
         setLoading(false);
       } catch (error) {

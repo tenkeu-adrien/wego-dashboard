@@ -18,6 +18,7 @@ import { app } from "./../firebase.config";
 import { useFirebaseUpload } from "hooks/useFirebaseUpload";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { compressImage, validatePdf } from './../../src/configs/fileUtils';
 
 // Initialisation de Firebase Storage
 const storage = getStorage(app);
@@ -105,6 +106,7 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
   const { uploadFile } = useFirebaseUpload();
   const selectedRole = watch("role");
   const avatarFile = watch("avatar");
+  console.log("uploadFile", uploadFile)
 
   // Effet pour gérer la prévisualisation de l'avatar
   useEffect(() => {
@@ -138,42 +140,21 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
     setError(null);
     
     try {
-      let avatarUrl = null;
-      let jointeUrl = null;
-
-      // Upload des fichiers si c'est un chauffeur
-      if (userData.role === 'driver') {
-        if (userData.avatar && userData.avatar.length > 0) {
-          const avatarFile = userData.avatar[0];
-          const avatarRef = ref(storage, `avatars/${Date.now()}_${avatarFile.name}`);
-          await uploadBytes(avatarRef, avatarFile);
-          avatarUrl = await getDownloadURL(avatarRef);
-        }
-
-        if (userData.jointe && userData.jointe.length > 0) {
-          const jointeFile = userData.jointe[0];
-          const jointeRef = ref(storage, `documents/${Date.now()}_${jointeFile.name}`);
-          await uploadBytes(jointeRef, jointeFile);
-          jointeUrl = await getDownloadURL(jointeRef);
-        }
-      }
-
-      
       // Préparation des données pour l'API AdonisJS
       const payload = {
         firstName: userData.firstName,
-        phone: selectedCode.dialCode + userData.phone.replace(/^0+/, ""), // Ajoute l'indicatif
+        phone: selectedCode.dialCode + userData.phone.replace(/^0+/, ""),
         role: userData.role,
-        password: userData.matricule, // Utilisation de la matricule comme mot de passe par défaut
+        password: userData.matricule,
         ...(userData.role === 'driver' && {
           vehiculeType: userData.vehiculeType,
           matricule: userData.matricule,
-          avatar: avatarUrl,
-          jointe: jointeUrl,
+          avatar: userData.avatar, // Déjà transformé en URL
+          jointe: userData.jointe, // Déjà transformé en URL
           driverType: userData.driverType
         })
       };
-
+  
       const response = await axios.post(`${API_URL}/register`, payload);
       
       fetchUsers();
@@ -185,34 +166,62 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
       console.error('Error adding user:', err);
       setError(err.response?.data?.message || err.message);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   };
-
   const onSubmit = async (data) => {
     try {
-      // Upload des fichiers si c'est un chauffeur
       setIsLoading(true);
+      
+      // Upload des fichiers si c'est un chauffeur
       if (data.role === 'driver') {
         if (data.avatar && data.avatar.length > 0) {
-          data.avatar = await uploadFile(data.avatar[0], 'avatars');
+          // Compression déjà faite dans handleAvatarChange, on upload directement
+          const avatarRef = ref(storage, `avatars/${Date.now()}_${data.avatar[0].name}`);
+          await uploadBytes(avatarRef, data.avatar[0]);
+          data.avatar = await getDownloadURL(avatarRef);
         }
+  
         if (data.jointe && data.jointe.length > 0) {
-          data.jointe = await uploadFile(data.jointe[0], 'documents');
+          // Valider le PDF avant upload
+          const validatedPdf = validatePdf(data.jointe[0]);
+          const jointeRef = ref(storage, `documents/${Date.now()}_${validatedPdf.name}`);
+          await uploadBytes(jointeRef, validatedPdf);
+          data.jointe = await getDownloadURL(jointeRef);
         }
       }
   
       await handleAddUser(data);
     } catch (error) {
       console.error("Failed to add user:", error);
+      toast.error(error.message || "Erreur lors de l'ajout de l'utilisateur");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files?.[0];
-    if (file) {
-      setValue("avatar", [file]);
+    if (!file) return;
+  
+    try {
+      setIsLoading(true);
+      // Compresser l'image avant de la prévisualiser
+      const compressedFile = await compressImage(file);
+      
+      // Créer une URL pour la prévisualisation
+      const previewUrl = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.readAsDataURL(compressedFile);
+      });
+      
+      setAvatarPreview(previewUrl);
+      setValue("avatar", [compressedFile]);
+    } catch (error) {
+      toast.error('Erreur lors de la compression de l\'image');
+      console.error(error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -410,36 +419,48 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
                           Avatar (photo)
                         </label>
                         <div className="mt-1 flex items-center gap-4">
-                          {avatarPreview && (
-                            <div className="relative">
-                              <img
-                                src={avatarPreview}
-                                alt="Preview"
-                                className="h-16 w-16 rounded-full object-cover"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setAvatarPreview(null);
-                                  setValue("avatar", null);
-                                }}
-                                className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white"
-                              >
-                                <XMarkIcon className="h-3 w-3" />
-                              </button>
-                            </div>
-                          )}
-                          <label className="cursor-pointer">
-                            <span className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm hover:bg-gray-50">
-                              Choisir une photo
-                            </span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              className="hidden"
-                              onChange={handleAvatarChange}
-                            />
-                          </label>
+
+{avatarPreview && (
+  <div className="relative">
+    <img
+      src={avatarPreview}
+      alt="Preview"
+      className="h-16 w-16 rounded-full object-cover"
+      style={{
+        // Optimisation pour les prévisualisations
+        objectFit: 'cover',
+        backgroundColor: '#f3f4f6' // Fond de fallback
+      }}
+    />
+    {!isLoading && (
+      <button
+        type="button"
+        onClick={() => {
+          setAvatarPreview(null);
+          setValue("avatar", null);
+        }}
+        className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white"
+      >
+        <XMarkIcon className="h-3 w-3" />
+      </button>
+    )}
+  </div>
+)}
+
+
+
+<label className="cursor-pointer">
+  <span className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm hover:bg-gray-50">
+    {isLoading ? 'Traitement...' : 'Choisir une photo'}
+  </span>
+  <input
+    type="file"
+    accept="image/*"
+    className="hidden"
+    onChange={handleAvatarChange}
+    disabled={isLoading}
+  />
+</label>
                         </div>
                         {errors.avatar && (
                           <p className="mt-1 text-sm text-red-600">{errors.avatar.message}</p>
@@ -451,11 +472,12 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
                           Pièce jointe (CNI, Passeport)
                         </label>
                         <input
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.pdf"
-                          {...register("jointe")}
-                          className="mt-1 w-full text-sm"
-                        />
+  type="file"
+  accept=".jpg,.jpeg,.png,.pdf"
+  {...register("jointe")}
+  className="mt-1 w-full text-sm"
+  disabled={isLoading}
+/>
                         {errors.jointe && (
                           <p className="mt-1 text-sm text-red-600">{errors.jointe.message}</p>
                         )}

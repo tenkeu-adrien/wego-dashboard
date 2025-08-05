@@ -11,6 +11,7 @@ import { useAuthContext } from 'app/contexts/auth/context';
 
 const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1';
 // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
+// http://localhost:3333/api/v1
 const UsersTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -122,7 +123,6 @@ console.log("userIds" ,userIds)
       }
 
       const response = await axios.get(`${API_URL}/users`, { params });
-console.log("response users" ,response)
       const fetchedUsers = response.data.data.users;
       console.log("fetchedUsers" ,fetchedUsers)
       setUsers(fetchedUsers);
@@ -365,7 +365,7 @@ console.log("response users" ,response)
 
   return (
       <div className="min-h-screen bg-gray-50 p-6">
-        <h1 className="text-2xl font-bold mb-3">Gestion des Utilisateurs</h1>
+        <h1 className="text-2xl font-bold mb-3">Gestion des Utilisateur</h1>
         
         {/* Filters and Search */}
         <div className="mb-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -475,7 +475,8 @@ console.log("response users" ,response)
                     <td className="px-5 py-3 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="flex-shrink-0 h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <User2 className="h-6 w-6 text-gray-500" />
+                          {/* <User2 className="h-6 w-6 text-gray-500" /> */}
+                          <img src={user.avatar} alt={user.first_name} width={12} height={12}  className='rounded-full w-14 h-12'/>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900 flex items-center">
@@ -613,7 +614,9 @@ console.log("response users" ,response)
                   <div className="flex-1 overflow-y-auto p-6">
                     <div className="flex flex-col items-center mb-6">
                       <div className="h-24 w-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                        <User2 className="h-12 w-12 text-gray-500" />
+                        {/* <User2 className="h-12 w-12 text-gray-500" /> */}
+
+                        <img src={selectedUser.avatar} alt={selectedUser.first_name} className="h-24 w-24 rounded-full"  width={24} height={24}/>
                       </div>
                       
                       <h3 className="text-lg font-bold">

@@ -7,10 +7,12 @@ const FinancialStats = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/dashboard/financial-stats
+const API_URL = "https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1"
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await axios.get('http://localhost:3333/api/v1/dashboard/financial-stats');
+        const response = await axios.get(`${API_URL}/dashboard/financial-stats`);
         setStats(response.data.map(stat => ({
           ...stat,
           // Formatage des valeurs

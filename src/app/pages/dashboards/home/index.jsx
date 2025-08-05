@@ -18,6 +18,20 @@ import { io } from 'socket.io-client'
 // import { SocialSource } from "../SocialSource";
 
 // ----------------------------------------------------------------------
+export const socket = io('https://wegoadmin-c5c82e2c5d80.herokuapp.com', {
+  transports: ['websocket'],
+  // Ajoutez d'autres options si besoin (auth, etc)
+})
+
+socket.on('connect', () => {
+  console.log('Connecté au serveur socket !', socket.id)
+  // Test ping-pong
+  socket.emit('test:ping', { hello: 'worl' })
+})
+
+socket.on('test:pong', (data) => {
+  console.log('Réponse du serveur:', data)
+})
 
 export default function Sales() {
  
@@ -29,20 +43,7 @@ export default function Sales() {
   
 
 // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
-  const socket = io('https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1', {
-  transports: ['websocket'],
-  // Ajoutez d'autres options si besoin (auth, etc)
-})
-
-socket.on('connect', () => {
-  console.log('Connecté au serveur socket !', socket.id)
-  // Test ping-pong
-  socket.emit('test:ping', { hello: 'world' })
-})
-
-socket.on('test:pong', (data) => {
-  console.log('Réponse du serveur:', data)
-})
+ 
 
 
   

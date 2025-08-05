@@ -17,11 +17,11 @@ const DriverPerformanceChart = () => {
   ]);
 
   const [loading, setLoading] = useState(true);
-
+const API_URL = "https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1"
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get('http://localhost:3333/api/v1/dashboard/driver-performance');
+        const response = await axios.get(`${API_URL}/dashboard/driver-performance`);
         const { motoTaxi, tricycle } = response.data.data;
 
         setSeries([

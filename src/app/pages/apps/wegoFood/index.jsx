@@ -8,7 +8,7 @@ import { storage } from "./../../../../firebase.config.js";
 import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
-
+import imageCompression from 'browser-image-compression';
 // Options pour les filtres
 const restaurantStatusOptions = [
   { value: 'all', label: 'Tous' },
@@ -43,7 +43,6 @@ const restaurantSchema = yup.object().shape({
   delivery_time: yup.string().required('Le temps de livraison est requis'),
   is_active: yup.boolean().required('Le statut est requis')
 });
-
 const dishSchema = yup.object().shape({
   name: yup.string().required('Le nom du plat est requis'),
   price: yup
@@ -51,8 +50,28 @@ const dishSchema = yup.object().shape({
     .transform((value, originalValue) => originalValue === '' ? undefined : value)
     .required('Le prix est requis')
     .positive('Le prix doit être positif'),
-  description: yup.string().required('La description est requise')
+  description: yup.string().required('La description est requise'),
+  images: yup.array().min(1, 'Au moins une image est requise')
 });
+// Ajoutez ce hook près des autres hooks useForm
+// const { 
+//   register: registerDishEdit, 
+//   handleSubmit: handleDishEditSubmit, 
+//   reset: resetDishEditForm,
+//   formState: { errors: dishEditErrors },
+// } = useForm({
+//   resolver: yupResolver(dishSchema)
+// });
+
+
+const imageCompressionOptions = {
+  maxSizeMB: 0.5, // Taille maximale de 500KB
+  maxWidthOrHeight: 1024, // Résolution maximale
+  useWebWorker: true,
+  fileType: 'image/webp' // Conversion en format WebP pour une meilleure compression
+};
+
+
 
 const RestaurantsTable = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -69,9 +88,33 @@ const RestaurantsTable = () => {
   const [allRestaurants, setAllRestaurants] = useState([]); // Nouvel état pour stocker tous les restaurants
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const [editingDish, setEditingDish] = useState(null);
+const [dishEditImagesPreview, setDishEditImagesPreview] = useState([]);
+const [dishEditImagesToUpload, setDishEditImagesToUpload] = useState([]);
+const [dishEditImagesToDelete, setDishEditImagesToDelete] = useState([]);
+
+
+// const { 
+//   handleSubmit, 
+//   formState: { errors } 
+// } = useForm({
+//   defaultValues: {
+//     name: '',
+//     price: '',
+//     description: ''
+//   }
+// });
+
+
+
   const API_URL = 'https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1';
   
+  // http://localhost:3333/api/v1';
+  
+  // console.log("selectRestaurant " ,selectedRestaurant)
   // http://localhost:3333/api/v1
+  // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
   const [meta, setMeta] = useState({
     total: 0,
     per_page: 8,
@@ -113,9 +156,14 @@ const RestaurantsTable = () => {
     reset: resetDishForm,
     formState: { errors: dishErrors },
   } = useForm({
-    resolver: yupResolver(dishSchema)
+    resolver: yupResolver(dishSchema),
+    defaultValues: {
+      name: '',
+      price: '',
+      description: '',
+      images: []
+    }
   });
-
   const restaurantFormValues = watchRestaurant();
 
   // Fonction pour transformer les données de l'API
@@ -134,6 +182,124 @@ const RestaurantsTable = () => {
       apiData: restaurant
     }));
   }, []);
+
+  const handleEditDish = (dish) => {
+    setEditingDish(dish);
+    // Ne montrer que les URLs Firebase existantes, pas de blobs
+    setDishEditImagesPreview(dish.images || []);
+    setDishEditImagesToUpload([]);
+    setDishEditImagesToDelete([]);
+    
+    // Pré-remplir le formulaire
+    resetDishForm({
+      name: dish.name,
+      price: dish.price.toString(),
+      description: dish.description,
+      images: dish.images || []
+    });
+  };
+  const handleCancelEditDish = () => {
+    // Nettoyer les URLs blob
+    dishEditImagesPreview.forEach(preview => {
+      if (preview.startsWith('blob:')) {
+        URL.revokeObjectURL(preview);
+      }
+    });
+    
+    setEditingDish(null);
+    setDishEditImagesPreview([]);
+    setDishEditImagesToUpload([]);
+    setDishEditImagesToDelete([]);
+  };
+  
+  const handleEditImageChange = async (e) => {
+    const files = Array.from(e.target.files);
+    
+    try {
+      // Ne pas créer de prévisualisation blob pour les nouvelles images
+      // Juste ajouter les fichiers à uploader
+      setDishEditImagesToUpload([...dishEditImagesToUpload, ...files]);
+      
+      // Pour la prévisualisation, utiliser directement les fichiers
+      const imagePreviews = await Promise.all(
+        files.map(async (file) => {
+          const compressedFile = await imageCompression(file, {
+            ...imageCompressionOptions,
+            maxSizeMB: 0.1 // Prévisualisation plus légère
+          });
+          return URL.createObjectURL(compressedFile);
+        })
+      );
+      
+      setDishEditImagesPreview([...dishEditImagesPreview, ...imagePreviews]);
+    } catch (error) {
+      console.error('Error handling images:', error);
+      toast.error('Erreur lors du traitement des images');
+    }
+  };
+  const handleRemoveEditDishImage = async (imgIdx) => {
+    // Si c'est une image existante (Firebase URL)
+    if (imgIdx < editingDish.images.length) {
+      const imgToDelete = editingDish.images[imgIdx];
+      if (!dishEditImagesToDelete.includes(imgToDelete)) {
+        setDishEditImagesToDelete([...dishEditImagesToDelete, imgToDelete]);
+      }
+    } 
+    // Si c'est une nouvelle image (pas encore uploadée)
+    else {
+      const fileIdx = imgIdx - editingDish.images.length;
+      const updatedUploads = [...dishEditImagesToUpload];
+      updatedUploads.splice(fileIdx, 1);
+      setDishEditImagesToUpload(updatedUploads);
+    }
+  
+    // Supprimer de la prévisualisation
+    const updatedPreviews = [...dishEditImagesPreview];
+    updatedPreviews.splice(imgIdx, 1);
+    setDishEditImagesPreview(updatedPreviews);
+  };
+  const onSubmitUpdateDish = async (data) => {
+    setIsProcessing(true);
+    // console.log("data" ,data) 
+    try {
+      // Supprimer les images marquées pour suppression
+      await Promise.all(
+        dishEditImagesToDelete.map(async (imgUrl) => {
+          await deleteImage(imgUrl);
+        })
+      );
+  
+      // Uploader seulement les NOUVELLES images (pas les prévisualisations blob)
+      const newImageUrls = await Promise.all(
+        dishEditImagesToUpload.map(async (file) => {
+          return await uploadImage(file);
+        })
+      );
+  
+      // Filtrer les images existantes qui ne sont pas supprimées
+      // const existingImages = editingDish.images
+      //   .filter(img => !dishEditImagesToDelete.includes(img));
+  
+      // Préparer les données pour l'API
+      const payload = {
+        name: data.name,
+        price: parseFloat(data.price),
+        description: data.description,
+        images: [...newImageUrls], // Combiner images existantes restantes et nouvelles
+      };
+  
+      await axios.patch(`${API_URL}/dishes/${editingDish.id}`, payload);
+      toast.success('Plat modifié avec succès');
+      fetchRestaurants();
+      setSelectedRestaurant(null)
+      handleCancelEditDish();
+    } catch (error) {
+      console.error('Error updating dish:', error);
+      toast.error('Erreur lors de la modification du plat');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
 
   // Fonction pour générer les dates en fonction de la période sélectionnée
   const getDateRange = useCallback(() => {
@@ -234,35 +400,6 @@ const RestaurantsTable = () => {
     transformApiData
   ]);
 
-
-  // const handleSearch = (term) => {
-  //   setSearchTerm(term);
-  //   if (term.trim() === '') {
-  //     // Si la recherche est vide, afficher tous les restaurants
-  //     setRestaurants(allRestaurants);
-  //     // Réinitialiser la pagination aux données originales
-  //     setMeta(prev => ({
-  //       ...prev,
-  //       total: allRestaurants.length,
-  //       current_page: 1
-  //     }));
-  //   } else {
-  //     // Filtrer les restaurants en fonction du terme de recherche
-  //     const filtered = allRestaurants.filter(restaurant => 
-  //       restaurant.name.toLowerCase().includes(term.toLowerCase()) ||
-  //       restaurant.cuisine.toLowerCase().includes(term.toLowerCase())
-  //     );
-  //     setRestaurants(filtered);
-  //     // Mettre à jour la pagination pour les résultats filtrés
-  //     setMeta(prev => ({
-  //       ...prev,
-  //       total: filtered.length,
-  //       current_page: 1
-  //     }));
-  //   }
-  // };
-
-  // Version debounced de fetchRestaurants pour les changements de filtre
   const debouncedFetchRestaurants = useMemo(() => debounce(fetchRestaurants, 300), [fetchRestaurants]);
 
   useEffect(() => {
@@ -384,7 +521,7 @@ const RestaurantsTable = () => {
   };
   
   const confirmToggleStatus = async () => {
-    if(user.role !== 'admin') return toast.info('Vous n\'avez pas les droits nécessaires');
+    // if(user.role !== 'admin') return toast.info('Vous n\'avez pas les droits nécessaires');
     
     try {
       await axios.patch(`${API_URL}/restaurants/${restaurantToToggle.apiData.id}/toggle-active`);
@@ -417,19 +554,34 @@ const RestaurantsTable = () => {
   };
 
   // Gestion des images avec Firebase
+  // const uploadImage = async (file) => {
+  //   if (!file) return null;
+    
+  //   try {
+  //     const storageRef = ref(storage, `restaurants/${Date.now()}_${file.name}`);
+  //     await uploadBytes(storageRef, file);
+  //     return await getDownloadURL(storageRef);
+  //   } catch (error) {
+  //     console.error('Error uploading image:', error);
+  //     throw error;
+  //   }
+  // };
+
   const uploadImage = async (file) => {
     if (!file) return null;
     
     try {
-      const storageRef = ref(storage, `restaurants/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, file);
+      // Compression de l'image avant upload
+      const compressedFile = await imageCompression(file, imageCompressionOptions);
+      
+      const storageRef = ref(storage, `restaurants/${Date.now()}_${compressedFile.name}`);
+      await uploadBytes(storageRef, compressedFile);
       return await getDownloadURL(storageRef);
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;
     }
   };
-
   const deleteImage = async (url) => {
     try {
       const imageRef = ref(storage, url);
@@ -460,7 +612,7 @@ const RestaurantsTable = () => {
         image: imageUrl,
         is_active: data.is_active
       };
-
+console.log("payload",payload)
       await axios.post(`${API_URL}/restaurants`, payload);
       fetchRestaurants();
       closeModal();
@@ -512,40 +664,74 @@ const RestaurantsTable = () => {
   };
 
   // Gestion de l'ajout de plat
-  const onSubmitAddDish = async (data) => {
-    setIsProcessing(true);
-    try {
-      // Upload des images du plat
-      const images = await Promise.all(
-        dishImagesPreview
-          .filter(img => img instanceof File || img.startsWith('blob:'))
-          .map(file => uploadImage(file))
-      );
+ // Modifiez la fonction onSubmitAddDish comme ceci :
+const onSubmitAddDish = async (data) => {
+  setIsProcessing(true);
+  try {
+    // Récupérer les fichiers originaux à partir de l'input file
+    const fileInput = document.querySelector('#dish-images-input');
+    const files = Array.from(fileInput.files);
+    
+    // Uploader seulement les nouvelles images (pas les prévisualisations blob)
+    const images = await Promise.all(
+      files.map(async (file) => {
+        return await uploadImage(file);
+      })
+    );
 
-      const payload = {
-        name: data.name,
-        price: parseFloat(data.price),
-        description: data.description,
-        images,
-      };
+    console.log("Uploaded images URLs:", images); // Devrait être des URLs Firebase HTTPS
 
-      await axios.post(`${API_URL}/dishes/${selectedRestaurantForDish.apiData.id}`, payload);
-      fetchRestaurants();
-      closeModal();
-      toast.success('Plat ajouté avec succès');
-    } catch (error) {
-      console.error('Error adding dish:', error);
-      toast.error('Erreur lors de l\'ajout du plat');
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    const payload = {
+      name: data.name,
+      price: data.price,
+      description: data.description,
+      images,
+    };
 
+    await axios.post(`${API_URL}/dishes/${selectedRestaurantForDish.apiData.id}`, payload);
+    fetchRestaurants();
+    closeModal();
+    toast.success('Plat ajouté avec succès');
+  } catch (error) {
+    console.error('Error adding dish:', error);
+    toast.error('Erreur lors de l\'ajout du plat');
+  } finally {
+    setIsProcessing(false);
+  }
+};
+
+// Et dans le JSX du modal d'ajout de plat, modifiez l'input file :
+{/* <input
+  id="dish-images-input" // Ajoutez cet ID
+  type="file"
+  accept="image/*"
+  multiple
+  max={5}
+  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
+  onChange={handleImageChange}
+  disabled={dishImagesPreview.length >= 5}
+/> */}
   // Gestion du changement d'image
-  const handleImageChange = (e) => {
+  const handleImageChange = async (e) => {
     const files = Array.from(e.target.files);
-    const previews = files.map(file => URL.createObjectURL(file));
-    setDishImagesPreview([...dishImagesPreview, ...previews]);
+    
+    try {
+      const imagePreviews = await Promise.all(
+        files.map(async (file) => {
+          // Créer une prévisualisation compressée
+          const compressedFile = await imageCompression(file, {
+            ...imageCompressionOptions,
+            maxSizeMB: 0.1 // Prévisualisation plus légère
+          });
+          return URL.createObjectURL(compressedFile);
+        })
+      );
+      
+      setDishImagesPreview([...dishImagesPreview, ...imagePreviews]);
+    } catch (error) {
+      console.error('Error compressing images:', error);
+      toast.error('Erreur lors de la compression des images');
+    }
   };
 
   // Suppression d'une image de plat
@@ -729,7 +915,7 @@ const RestaurantsTable = () => {
                       </div>
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap text-sm text-gray-500">
-                      {restaurant.dishesCount} plats
+                      {restaurant.dishes.length} plats
                     </td>
                     <td className="px-3 py-4 whitespace-nowrap">
                       {getStatusBadge(restaurant.isActive)}
@@ -919,58 +1105,164 @@ const RestaurantsTable = () => {
                       <div>
                         <h3 className="text-md font-medium text-gray-900 mb-3">Menu ({selectedRestaurant.dishes.length} plats)</h3>
                         <div className="space-y-4">
-                          {selectedRestaurant.dishes.length > 0 ? (
-                            selectedRestaurant.dishes.map(dish => (
-                              <div key={dish.id} className="border rounded-md p-3 relative">
-                                <button
-                                  onClick={() => handleDeleteDish(dish.id)}
-                                  className="absolute top-2 right-2 text-red-500 hover:text-red-700 mt-1"
-                                  title="Supprimer le plat"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
-                                
-                                <div className="flex justify-between">
-                                  <div>
-                                    <h4 className="font-medium text-gray-900">{dish.name}</h4>
-                                    <p className="text-sm text-gray-500">{dish.description}</p>
-                                  </div>
-                                  <span className="font-bold text-green-600">{dish.price} FCFA</span>
-                                </div>
-                                <div className="mt-2 flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <button 
-                                      onClick={() => toggleFavorite(dish.id, dish.isFavorite)}
-                                      className="text-yellow-500 hover:text-yellow-600"
-                                    >
-                                      {dish.isFavorite ? (
-                                        <Heart className="w-4 h-4 fill-yellow-500" />
-                                      ) : (
-                                        <HeartOff className="w-4 h-4" />
-                                      )}
-                                    </button>
-                                    <span className="text-xs text-gray-500 ml-2">
-                                      {dish.likes} likes, {dish.dislikes} dislikes
-                                    </span>
-                                  </div>
-                                  {dish.images && dish.images.length > 0 && (
-                                    <div className="flex space-x-1">
-                                      {dish.images.map((image, index) => (
-                                        <img 
-                                          key={index} 
-                                          src={image} 
-                                          alt={dish.name} 
-                                          className="w-8 h-8 rounded-sm object-cover"
-                                        />
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ))
-                          ) : (
+                        {selectedRestaurant.dishes.map(dish => (
+  <div key={dish.id} className="border rounded-md p-3 relative">
+    {editingDish?.id === dish.id ? (
+      <form onSubmit={handleDishSubmit(onSubmitUpdateDish)}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+            <input
+              type="text"
+              className="w-full px-2 py-1 border border-gray-300 rounded-md"
+              {...registerDish('name', { required: 'Le nom est requis' })}
+            />
+            {/* {dishErrors.name && <p className="text-red-500 text-xs mt-1">{dishErrors.name.message}</p>} */}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Prix (FCFA)</label>
+            <input
+              type="number"
+              step="0.01"
+              className="w-full px-2 py-1 border border-gray-300 rounded-md"
+              {...registerDish('price', { 
+                required: 'Le prix est requis',
+                min: { value: 0.1, message: 'Le prix doit être supérieur à 0' }
+              })}
+            />
+            {/* {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>} */}
+          </div>
+        </div>
+        
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <textarea
+            className="w-full px-2 py-1 border border-gray-300 rounded-md"
+            rows={2}
+            {...registerDish('description', { required: 'La description est requise' })}
+          />
+          {/* {errors.description && <p className="text-red-500 text-xs mt-1">{errors.description.message}</p>} */}
+        </div>
+        
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-700 mb-1">Images</label>
+          <input
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleEditImageChange}
+            className="w-full text-sm"
+            disabled={dishEditImagesPreview.length >= 5}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            {5 - dishEditImagesPreview.length} images peuvent encore être ajoutées
+          </p>
+          <div className="flex flex-wrap gap-2 mt-2">
+            {dishEditImagesPreview.map((img, idx) => (
+              <div key={idx} className="relative">
+                <img
+                  src={img}
+                  alt={`Preview ${idx}`}
+                  className="w-12 h-12 object-cover rounded"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveEditDishImage(idx)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-2">
+          <button
+            type="button"
+            onClick={handleCancelEditDish}
+            className="px-3 py-1 text-sm bg-gray-200 rounded-md"
+            disabled={isProcessing}
+          >
+            Annuler
+          </button>
+          <button
+            type="submit"
+            disabled={isProcessing}
+            className="px-3 py-1 text-sm bg-[#F4C509] text-white rounded-md flex items-center justify-center"
+          >
+            {isProcessing ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Enregistrement...
+              </>
+            ) : 'Enregistrer'}
+          </button>
+        </div>
+      </form>
+    ) : (
+      <>
+        <button
+          onClick={() => handleDeleteDish(dish.id)}
+          className="absolute top-2 left-[400px] text-red-500 hover:text-red-700 mt-1"
+          title="Supprimer le plat"
+        >
+          <Trash className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => handleEditDish(dish)}
+          className="absolute top-2 left-[450px] text-blue-500 hover:text-blue-700 mt-1"
+          title="Modifier le plat"
+        >
+          <Edit className="w-4 h-4" />
+        </button>
+        
+        <div className="flex justify-between">
+          <div>
+            <h4 className="font-medium text-gray-900">{dish.name}</h4>
+            <p className="text-sm text-gray-500">{dish.description}</p>
+          </div>
+          <span className="font-bold text-green-600">{dish.price} FCFA</span>
+        </div>
+        <div className="mt-2 flex justify-between items-center">
+          <div className="flex items-center">
+            <button 
+              onClick={() => toggleFavorite(dish.id, dish.isFavorite)}
+              className="text-yellow-500 hover:text-yellow-600"
+            >
+              {dish.isFavorite ? (
+                <Heart className="w-4 h-4 fill-yellow-500" />
+              ) : (
+                <HeartOff className="w-4 h-4" />
+              )}
+            </button>
+            <span className="text-xs text-gray-500 ml-2">
+              {dish.likes} likes, {dish.dislikes} dislikes
+            </span>
+          </div>
+          {dish.images && dish.images.length > 0 && (
+            <div className="flex space-x-1">
+              {dish.images.map((image, index) => (
+                <img 
+                  key={index} 
+                  src={image} 
+                  alt={dish.name} 
+                  className="w-8 h-8 rounded-sm object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </>
+    )}
+  </div>
+))}
+                          {/* ) : (
                             <p className="text-sm text-gray-500">Aucun plat disponible pour ce restaurant</p>
-                          )}
+                          )} */}
                         </div>
                       </div>
                     </div>
@@ -1051,7 +1343,7 @@ const RestaurantsTable = () => {
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                           <select
-                            className={`w-full px-3 py-2 border ${restaurantErrors.is_active ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            className={`w-full px-3 py-2 border ${restaurantErrors.isActive ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
                             {...registerRestaurant('is_active', { valueAsBoolean: true })}
                           >
                             <option value="true">Actif</option>
@@ -1310,14 +1602,22 @@ const RestaurantsTable = () => {
                         </div>
                         
                         <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Images du plat</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Images du plat (max 5)
+                          </label>
                           <input
                             type="file"
+                            id="dish-images-input" 
                             accept="image/*"
                             multiple
+                            max={5} // Limite à 5 images
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500"
                             onChange={handleImageChange}
+                            disabled={dishImagesPreview.length >= 5} // Désactive si déjà 5 images
                           />
+                          <p className="mt-1 text-xs text-gray-500">
+                            Formats acceptés: JPG, PNG, WEBP. Taille max: 1MB par image.
+                          </p>
                         </div>
                       </div>
                       
