@@ -9,6 +9,7 @@ import { useForm } from 'react-hook-form';
 import * as yup from 'yup';
 import { yupResolver } from '@hookform/resolvers/yup';
 import imageCompression from 'browser-image-compression';
+import { Page } from 'components/shared/Page.jsx';
 // Options pour les filtres
 const restaurantStatusOptions = [
   { value: 'all', label: 'Tous' },
@@ -23,6 +24,16 @@ const cuisineTypeOptions = [
   { value: 'asian', label: 'Asiatique' },
   { value: 'american', label: 'Américaine' }
 ];
+
+const countryCodes = [
+  { code: "CM", name: "Cameroun", dialCode: "+237", flag: "🇨🇲" },
+  { code: "SN", name: "Sénégal", dialCode: "+221", flag: "🇸🇳" },
+  { code: "CI", name: "Côte d'Ivoire", dialCode: "+225", flag: "🇨🇮" },
+  { code: "NG", name: "Nigeria", dialCode: "+234", flag: "🇳🇬" },
+  { code: "GA", name: "Gabon", dialCode: "+241", flag: "🇬🇦" },
+];
+
+
 
 const periodOptions = [
   { value: 'all', label: 'Toutes périodes' },
@@ -40,6 +51,8 @@ const restaurantSchema = yup.object().shape({
     return typeof value === 'string' || value instanceof File;
   }),
   cuisine: yup.string().required('Le type de cuisine est requis'),
+  address: yup.string().required('L\'adresse est requise'),
+  phone: yup.string().required('Le numéro de téléphone est requis'),
   delivery_time: yup.string().required('Le temps de livraison est requis'),
   is_active: yup.boolean().required('Le statut est requis')
 });
@@ -81,6 +94,7 @@ const RestaurantsTable = () => {
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
   const { user } = useAuthContext();
   const [selectedRestaurant, setSelectedRestaurant] = useState(null);
   const [restaurantToToggle, setRestaurantToToggle] = useState(null);
@@ -171,6 +185,8 @@ const [dishEditImagesToDelete, setDishEditImagesToDelete] = useState([]);
     return apiRestaurants.map(restaurant => ({
       id: restaurant.id.toString(),
       name: restaurant.name,
+      phone: restaurant.phone,
+      address: restaurant.address,
       cuisine: restaurant.cuisine,
       rating: restaurant.rating || 0,
       deliveryTime: restaurant.delivery_time || 'N/A',
@@ -473,6 +489,8 @@ const [dishEditImagesToDelete, setDishEditImagesToDelete] = useState([]);
     resetRestaurantForm({
       name: restaurant.name,
       cuisine: restaurant.cuisine,
+      phone: restaurant.phone,
+      address: restaurant.address,
       delivery_time: restaurant.deliveryTime,
       image: restaurant.image,
       is_active: restaurant.isActive,
@@ -606,6 +624,8 @@ const [dishEditImagesToDelete, setDishEditImagesToDelete] = useState([]);
       // Préparation des données pour l'API
       const payload = {
         name: data.name,
+        address:data.address,
+        phone: selectedCode.dialCode + data.phone.replace(/^0+/, ""),
         userId: user?.id,
         cuisine: data.cuisine,
         delivery_time: data.delivery_time,
@@ -646,6 +666,8 @@ console.log("payload",payload)
         name: data.name,
         cuisine: data.cuisine,
         deliveryTime: data.delivery_time,
+        address:data.address,
+        phone: selectedCode.dialCode + data.phone.replace(/^0+/, ""),
         image: imageUrl,
         isActive: data.is_active
       };
@@ -762,6 +784,7 @@ const onSubmitAddDish = async (data) => {
   );
 
   return (
+    <Page title="Gestion des Restaurants">
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-6 text-gray-800">Gestion des Restaurants</h1>
       
@@ -1328,6 +1351,47 @@ const onSubmitAddDish = async (data) => {
                         </div>
                         
                         <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                          <input
+                            type="text"
+                            className={`w-full px-3 py-2 border ${restaurantErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            {...registerRestaurant('address')}
+                          />
+                          {restaurantErrors.address && (
+                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.address.message}</p>
+                          )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone</label>
+                        <div className="flex">
+                        <select
+      value={selectedCode.dialCode}
+      onChange={(e) => {
+        const found = countryCodes.find(c => c.dialCode === e.target.value);
+        if (found) setSelectedCode(found);
+      }}
+      className="mr-2 rounded-md border px-2 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] bg-white"
+    >
+      {countryCodes.map((code) => (
+        <option key={code.code} value={code.dialCode}>
+          {code.flag} {code.dialCode}
+        </option>
+      ))}
+    </select>
+                          <input
+                            type="text"
+                            className={`w-full px-3 py-2 border ${restaurantErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            {...registerRestaurant('phone')}
+                          />
+                        </div>
+                          {restaurantErrors.phone && (
+                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.phone.message}</p>
+                          )}
+                        </div>
+            
+                        
+                        <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Temps de livraison</label>
                           <input
                             type="text"
@@ -1344,13 +1408,13 @@ const onSubmitAddDish = async (data) => {
                           <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                           <select
                             className={`w-full px-3 py-2 border ${restaurantErrors.isActive ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
-                            {...registerRestaurant('is_active', { valueAsBoolean: true })}
+                            {...registerRestaurant('isActive', { valueAsBoolean: true })}
                           >
                             <option value="true">Actif</option>
                             <option value="false">Inactif</option>
                           </select>
-                          {restaurantErrors.is_active && (
-                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.is_active.message}</p>
+                          {restaurantErrors.isActive && (
+                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.isActive.message}</p>
                           )}
                         </div>
                         
@@ -1462,7 +1526,7 @@ const onSubmitAddDish = async (data) => {
                             {cuisineTypeOptions.filter(opt => opt.value !== 'all').map(option => (
                               <option key={option.value} value={option.value}>{option.label}</option>
                             ))}
-                          </select>
+                          </select> 
                           {restaurantErrors.cuisine && (
                             <p className="mt-1 text-sm text-red-600">{restaurantErrors.cuisine.message}</p>
                           )}
@@ -1480,6 +1544,53 @@ const onSubmitAddDish = async (data) => {
                           )}
                         </div>
                         
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Adresse</label>
+                          <input
+                            type="text"
+                            className={`w-full px-3 py-2 border ${restaurantErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            {...registerRestaurant('address')}
+                          />
+                          {restaurantErrors.address && (
+                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.address.message}</p>
+                          )}
+                        </div>
+
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Numero de telephone</label>
+                         
+                          <div className="flex">
+                        <select
+      value={selectedCode.dialCode}
+      onChange={(e) => {
+        const found = countryCodes.find(c => c.dialCode === e.target.value);
+        if (found) setSelectedCode(found);
+      }}
+      className="mr-2 rounded-md border px-2 py-2 text-sm shadow-sm focus:border-[#06A257] focus:ring-[#06A257] bg-white"
+    >
+      {countryCodes.map((code) => (
+        <option key={code.code} value={code.dialCode}>
+          {code.flag} {code.dialCode}
+        </option>
+      ))}
+    </select>
+                          <input
+                            type="text"
+                            className={`w-full px-3 py-2 border ${restaurantErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            {...registerRestaurant('phone')}
+                          />
+                        </div>
+                         
+                          {/* <input
+                            type="text"
+                            className={`w-full px-3 py-2 border ${restaurantErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-green-500 focus:border-green-500`}
+                            {...registerRestaurant('phone')}
+                          /> */}
+                          {restaurantErrors.phone && (
+                            <p className="mt-1 text-sm text-red-600">{restaurantErrors.phone.message}</p>
+                          )}
+                        </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">Statut</label>
                           <select
@@ -1735,6 +1846,7 @@ const onSubmitAddDish = async (data) => {
         </div>
       )}
     </div>
+    </Page>
   );
 };
 

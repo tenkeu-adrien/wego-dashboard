@@ -123,6 +123,13 @@ const protectedRoutes = {
               }),
             },
             {
+              path: "orders",
+              lazy: async () => ({
+                Component: (await import("app/pages/apps/orders")).default,
+              }),
+            },
+            
+            {
               path: "rapports",
               lazy: async () => ({
                 Component: (await import("app/pages/apps/rapports")).default,

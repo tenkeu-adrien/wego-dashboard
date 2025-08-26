@@ -83,6 +83,14 @@ export const dashboards = {
       Icon: WegoFoodIcon,
     },
     {
+      id: 'orders',
+      path: path(ROOT_APPS, '/orders'),
+      type: NAV_TYPE_ITEM,
+      title: 'Orders',
+      transKey: 'nav.configuration.orders',
+      Icon: LicenseIco,
+    },
+    {
       id: 'points',
       path: path(ROOT_DASHBOARDS, '/points'),
       type: NAV_TYPE_COLLAPSE,

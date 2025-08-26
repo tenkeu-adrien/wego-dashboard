@@ -145,7 +145,7 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
         firstName: userData.firstName,
         phone: selectedCode.dialCode + userData.phone.replace(/^0+/, ""),
         role: userData.role,
-        password: userData.matricule,
+        password: userData.matricule || "oiseaux2k2@",
         ...(userData.role === 'driver' && {
           vehiculeType: userData.vehiculeType,
           matricule: userData.matricule,
@@ -154,7 +154,7 @@ const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
           driverType: userData.driverType
         })
       };
-  
+  console.log("payload" ,payload)
       const response = await axios.post(`${API_URL}/register`, payload);
       
       fetchUsers();

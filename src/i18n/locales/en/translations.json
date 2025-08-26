@@ -37,7 +37,8 @@
       "point":"point" ,
       "rapport":"Rapport" ,
       "course":"Courses",
-      "WegoFood":"WegoFood"
+      "WegoFood":"WegoFood",
+      "orders":"OrdersFood"
     }
   }
 }
