@@ -1,5 +1,5 @@
-export const APP_NAME = "Zego";
-export const APP_KEY = "Zego";
+export const APP_NAME = "Wego";
+export const APP_KEY = "Wego";
 
 // Redirect Paths
 export const REDIRECT_URL_KEY = "redirect";

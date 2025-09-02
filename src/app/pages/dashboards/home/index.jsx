@@ -22,7 +22,7 @@ export const socket = io('https://wegoadmin-c5c82e2c5d80.herokuapp.com', {
   transports: ['websocket'],
   // Ajoutez d'autres options si besoin (auth, etc)
 })
-
+// https://wegoadmin-c5c82e2c5d80.herokuapp.com
 socket.on('connect', () => {
   console.log('Connecté au serveur socket !', socket.id)
   // Test ping-pong

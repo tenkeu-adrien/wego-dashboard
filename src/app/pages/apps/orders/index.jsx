@@ -551,8 +551,8 @@ const OrdersComponent = () => {
   // console.log()
 
   const API_URL = "https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1"
-  // https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1
-
+  // 
+// http://localhost:3333/api/v1
   const statusOptions = [
     { value: 'all', label: 'Tous les statuts' },
     { value: 'pending', label: 'En attente' },
@@ -647,6 +647,7 @@ console.log("orders",orders)
   
       const response = await axios.get(`${API_URL}/orders`, { params })
       
+      console.log("response" ,response)
       const { data, meta } = response.data
       setOrders(data || [])
       setAllOrders(data || []) // Pour le filtrage côté client
@@ -753,9 +754,9 @@ console.log("orders",orders)
         status: 'delivering',
         driver_id: selectedDriver
       })  
-      
+        fetchOrders(1)
       toast.success('Commande en cours de livraison')
-      
+    
       // Mettre à jour localement le statut et le livreur
       setAllOrders(prev => prev.map(order => 
         order.id === currentOrderId ? { 
@@ -826,13 +827,13 @@ console.log("orders",orders)
       ))
     }
 
-    socket.on('order:new', handleNewOrder)
-    socket.on('order:status', handleStatusChange)
+    socket.on('order:store', handleNewOrder)
+    // socket.on('order:status', handleStatusChange)
     socket.on('order:delivered', handleStatusChange)
 
     return () => {
-      socket.off('order:new', handleNewOrder)
-      socket.off('order:status', handleStatusChange)
+      socket.off('order:store', handleNewOrder)
+      // socket.off('order:status', handleStatusChange)
       socket.off('order:delivered', handleStatusChange)
     }
   }, [socket])
@@ -948,7 +949,7 @@ console.log("orders",orders)
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-blue-800">Instructions</h3>
-              <div className="mt-2 text-sm text-blue-700">
+              <div className="mt-1 text-sm text-blue-700">
                 <p>Cliquez sur les boutons de statut pour faire évoluer une commande :</p>
                 <div className="flex flex-wrap gap-3 mt-2">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
