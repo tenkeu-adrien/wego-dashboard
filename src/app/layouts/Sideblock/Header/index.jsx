@@ -1,23 +1,24 @@
 // Import Dependencies
-import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+// import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 
 // Local Imports
-import SearchIcon from "assets/dualicons/search.svg?react";
+// import SearchIcon from "assets/dualicons/search.svg?react";
 // import { RightSidebar } from "components/template/RightSidebar";
 // import { LanguageSelector } from "components/template/LaguageSelector";
 // import { Notifications } from "components/template/Notifications";
-import { Button } from "components/ui";
+// import { Button } from "components/ui";
 import { SidebarToggleBtn } from "components/shared/SidebarToggleBtn";
-import { useBreakpointsContext } from "app/contexts/breakpoint/context";
+// import { useBreakpointsContext } from "app/contexts/breakpoint/context";
 import { Profile } from "../Profile";
-import { Search } from "components/template/Search";
+// import { Search } from "components/template/Search";
 import { useThemeContext } from "app/contexts/theme/context";
+import { Notifications } from "components/template/Notifications";
 
 // ----------------------------------------------------------------------
 
 export function Header() {
-  const { smAndUp } = useBreakpointsContext();
+  // const { smAndUp } = useBreakpointsContext();
   const { cardSkin } = useThemeContext();
 
   return (
@@ -33,7 +34,7 @@ export function Header() {
 
       <div className="flex items-center gap-2 sm:flex-1">
         <div className="flex-1">
-          <Search
+          {/* <Search
             renderButton={(open) => (
               <>
                 {smAndUp && (
@@ -74,9 +75,9 @@ export function Header() {
                 </Button>
               </>
             )}
-          />
+          /> */}
         </div>
-        {/* <Notifications /> */}
+        <Notifications />
         {/* <RightSidebar /> */}
         {/* <LanguageSelector /> */}
         <Profile />

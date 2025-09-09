@@ -35,12 +35,13 @@ export default function PricingDashboard() {
   const [activeTab, setActiveTab] = useState('course');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState({}); // État pour suivre les sauvegardes par véhicule
-
+const API_URL ="https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1"
+// https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/pricing'
   // Charger les données depuis l'API
   useEffect(() => {
     const fetchPricing = async () => {
       try {
-        const response = await fetch('https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/pricing');
+        const response = await fetch(`${API_URL}/pricing`);
         if (!response.ok) throw new Error('Erreur réseau');
         
         const data = await response.json();
@@ -85,7 +86,7 @@ export default function PricingDashboard() {
         throw new Error('Le taux de commission doit être entre 0 et 100%');
       }
 
-      const response = await fetch(`https://wegoadmin-c5c82e2c5d80.herokuapp.com/api/v1/pricing/${vehicleId}`, {
+      const response = await fetch(`${API_URL}/pricing/${vehicleId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

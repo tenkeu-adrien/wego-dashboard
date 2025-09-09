@@ -112,7 +112,7 @@ export function Profile() {
                 <div className="px-4 pt-4">
                   <Button className="w-full gap-2" onClick={()=> logout()}>
                     <ArrowLeftStartOnRectangleIcon className="size-4.5" />
-                    <span>Logout</span>
+                    <span>se deconnecter</span>
                   </Button>
                 </div>
               </div>

@@ -3,24 +3,13 @@ import {
   Popover,
   PopoverButton,
   PopoverPanel,
-  Tab,
-  TabGroup,
-  TabList,
-  TabPanel,
-  TabPanels,
   Transition,
 } from "@headlessui/react";
 import PropTypes from "prop-types";
 import {
   ArchiveBoxXMarkIcon,
-  Cog6ToothIcon,
-  DocumentTextIcon,
-  EnvelopeIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
-import { IoCheckmarkDoneOutline } from "react-icons/io5";
-import clsx from "clsx";
-import { Fragment, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router";
 
 // Local Imports
@@ -28,64 +17,111 @@ import { Avatar, AvatarDot, Badge, Button } from "components/ui";
 import { useThemeContext } from "app/contexts/theme/context";
 import AlarmIcon from "assets/dualicons/alarm.svg?react";
 import GirlEmptyBox from "assets/illustrations/girl-empty-box.svg?react";
+import { socket } from 'app/pages/dashboards/home'
+
+// Import du son de notification
+import notificationSound from 'assets/notification.mp3';
 
 // ----------------------------------------------------------------------
 
-const types = {
-  message: {
-    title: "Message",
-    Icon: EnvelopeIcon,
-    color: "info",
-  },
-  task: {
-    title: "Task",
-    Icon: IoCheckmarkDoneOutline,
-    color: "success",
-  },
-  log: {
-    title: "Log",
-    Icon: DocumentTextIcon,
-    color: "neutral",
-  },
-  security: {
-    title: "Security",
-    Icon: ExclamationTriangleIcon,
-    color: "error",
-  },
-};
-
-const fakeNotifications = [
+// Notifications initiales
+const initialNotifications = [
   {
     id: 1,
-    title: "Logged in",
-    description: "You have successfully logged in",
-    type: "log",
-    time: "few seconds ago",
+    title: "Connecté",
+    description: "Vous vous êtes connecté avec succès",
+    time: "à l'instant",
   },
 ];
 
-const typesKey = Object.keys(types);
-
 export function Notifications() {
-  const [notifications, setNotifications] = useState(fakeNotifications);
-  const [activeTab, setActiveTab] = useState(0);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const audioRef = useRef(null);
 
-  const filteredNotifications = notifications.filter(
-    (notification) => notification.type === Object.keys(types)[activeTab - 1],
-  );
+  // Charger le son de notification
+  useEffect(() => {
+    audioRef.current = new Audio(notificationSound);
+    audioRef.current.volume = 0.3; // Volume à 30%
+  }, []);
+
+  useEffect(() => {
+    // Écouter les événements Socket.io pour les commandes
+    const handleNewOrder = (orderData) => {
+      console.log("orderData", orderData);
+      
+      const newNotification = {
+        id: Date.now() + Math.random(),
+        title: "Nouvelle commande",
+        description: `Commande #${orderData.id} - ${orderData.total_price} FCFA`,
+        time: "à l'instant",
+        orderData: orderData,
+        timestamp: new Date(),
+      };
+
+      // Jouer le son de notification
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0; // Réinitialiser le son
+        audioRef.current.play().catch(error => {
+          console.log("Erreur de lecture audio:", error);
+        });
+      }
+
+      setNotifications(prev => [newNotification, ...prev]);
+    };
+
+    const handleOrderUpdate = (orderData) => {
+      const newNotification = {
+        id: Date.now() + Math.random(),
+        title: "Commande mise à jour",
+        description: `Commande #${orderData.id} - Statut: ${orderData.status == "delivered"? "livrer":
+          orderData.status 
+        }`,
+        time: "à l'instant",
+        orderData: orderData,
+        timestamp: new Date(),
+      };
+
+      // Jouer le son aussi pour les mises à jour si souhaité
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(error => {
+          console.log("Erreur de lecture audio:", error);
+        });
+      }
+
+      setNotifications(prev => [newNotification, ...prev]);
+    };
+
+    // S'abonner aux événements Socket.io
+    socket.on('order:store', handleNewOrder);
+    socket.on('order:delivered', handleOrderUpdate);
+    return () => {
+      // Se désabonner des événements
+      socket.off('order:store', handleNewOrder);
+      socket.off('order:delivered', handleOrderUpdate);
+    };
+  }, []);
 
   const removeNotification = (id) => {
     setNotifications((n) => n.filter((n) => n.id !== id));
   };
 
   const clearNotifications = () => {
-    if (activeTab === 0) {
-      setNotifications([]);
-    } else {
-      setNotifications((n) =>
-        n.filter((n) => n.type !== typesKey[activeTab - 1]),
-      );
-    }
+    setNotifications([]);
+  };
+
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "à l'instant";
+    
+    const now = new Date();
+    const notificationTime = new Date(timestamp);
+    const diffInSeconds = Math.floor((now - notificationTime) / 1000);
+    
+    if (diffInSeconds < 60) return `il y a ${diffInSeconds} seconde(s)`;
+    if (diffInSeconds < 3600) return `il y a ${Math.floor(diffInSeconds / 60)} minute(s)`;
+    if (diffInSeconds < 86400) return `il y a ${Math.floor(diffInSeconds / 3600)} heure(s)`;
+    
+    return `il y a ${Math.floor(diffInSeconds / 86400)} jour(s)`;
   };
 
   return (
@@ -143,100 +179,34 @@ export function Notifications() {
                     variant="flat"
                     onClick={close}
                   >
-                    <Cog6ToothIcon className="size-4.5" />
+                    {/* Icône de paramètres ou fermeture */}
                   </Button>
                 </div>
               </div>
-              <TabGroup
-                as={Fragment}
-                selectedIndex={activeTab}
-                onChange={setActiveTab}
-              >
-                <TabList className="hide-scrollbar flex shrink-0 overflow-x-auto scroll-smooth bg-gray-100 px-3 dark:bg-dark-800">
-                  <Tab
-                    onFocus={(e) => {
-                      e.target.parentNode.scrollLeft =
-                        e.target.offsetLeft -
-                        e.target.parentNode.offsetWidth / 2;
-                    }}
-                    className={({ selected }) =>
-                      clsx(
-                        "shrink-0 scroll-mx-16 whitespace-nowrap border-b-2 px-3 py-2 font-medium",
-                        selected
-                          ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-400"
-                          : "border-transparent hover:text-gray-800 focus:text-gray-800 dark:hover:text-dark-100 dark:focus:text-dark-100",
-                      )
-                    }
-                    as={Button}
-                    unstyled
-                  >
-                    All
-                  </Tab>
-                  {typesKey.map((key) => (
-                    <Tab
-                      onFocus={(e) => {
-                        e.target.parentNode.scrollLeft =
-                          e.target.offsetLeft -
-                          e.target.parentNode.offsetWidth / 2;
-                      }}
-                      key={key}
-                      className={({ selected }) =>
-                        clsx(
-                          "shrink-0 scroll-mx-16 whitespace-nowrap border-b-2 px-3 py-2 font-medium",
-                          selected
-                            ? "border-primary-600 text-primary-600 dark:border-primary-500 dark:text-primary-400"
-                            : "border-transparent hover:text-gray-800 focus:text-gray-800 dark:hover:text-dark-100 dark:focus:text-dark-100",
-                        )
-                      }
-                      as={Button}
-                      unstyled
-                    >
-                      {types[key].title}
-                    </Tab>
-                  ))}
-                </TabList>
-                {(notifications.length > 0 && activeTab === 0) ||
-                filteredNotifications.length > 0 ? (
-                  <TabPanels as={Fragment}>
-                    <TabPanel className="custom-scrollbar grow space-y-4 overflow-y-auto overflow-x-hidden p-4 outline-none">
-                      {notifications.map((item) => (
-                        <NotificationItem
-                          key={item.id}
-                          remove={removeNotification}
-                          data={item}
-                        />
-                      ))}
-                    </TabPanel>
-                    {typesKey.map((key) => (
-                      <TabPanel
-                        key={key}
-                        className="custom-scrollbar scrollbar-hide grow space-y-4 overflow-y-auto overflow-x-hidden p-4"
-                      >
-                        {filteredNotifications.map((item) => (
-                          <NotificationItem
-                            key={item.id}
-                            remove={removeNotification}
-                            data={item}
-                          />
-                        ))}
-                      </TabPanel>
+
+              {notifications.length > 0 ? (
+                <>
+                  <div className="custom-scrollbar grow space-y-4 overflow-y-auto overflow-x-hidden p-4">
+                    {notifications.map((item) => (
+                      <NotificationItem
+                        key={item.id}
+                        remove={removeNotification}
+                        data={item}
+                        formatTime={formatTime}
+                      />
                     ))}
-                  </TabPanels>
-                ) : (
-                  <Empty />
-                )}
-              </TabGroup>
-              {((notifications.length > 0 && activeTab === 0) ||
-                filteredNotifications.length > 0) && (
-                <div className="shrink-0 overflow-hidden rounded-b-lg bg-gray-100 dark:bg-dark-800">
-                  <Button
-                    // variant="flat"
-                    className="w-full rounded-t-none"
-                    onClick={clearNotifications}
-                  >
-                    <span>Archive all notifications</span>
-                  </Button>
-                </div>
+                  </div>
+                  <div className="shrink-0 overflow-hidden rounded-b-lg bg-gray-100 dark:bg-dark-800">
+                    <Button
+                      className="w-full rounded-t-none"
+                      onClick={clearNotifications}
+                    >
+                      <span>Tout effacer</span>
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <Empty />
               )}
             </div>
           )}
@@ -257,32 +227,33 @@ function Empty() {
           style={{ "--primary": primary[500], "--dark": dark[500] }}
         />
         <div className="mt-6">
-          <p>No new notifications yet</p>
+          <p>Aucune nouvelle notification</p>
         </div>
       </div>
     </div>
   );
 }
 
-function NotificationItem({ data, remove }) {
-  const Icon = types[data.type].Icon;
+function NotificationItem({ data, remove, formatTime }) {
   return (
-    <div className="group flex items-center justify-between gap-3">
+    <div className="group flex items-center justify-between gap-3 rounded-lg p-2 hover:bg-gray-50 dark:hover:bg-dark-600">
       <div className="flex min-w-0 gap-3">
         <Avatar
           size={10}
-          initialColor={types[data.type].color}
+          initialColor="primary"
           classNames={{ display: "rounded-lg" }}
         >
-          <Icon className="size-4.5" />
+          <AlarmIcon className="size-4.5" />
         </Avatar>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="-mt-0.5 truncate font-medium text-gray-800 dark:text-dark-100">
             {data.title}
           </p>
-          <div className="mt-0.5 truncate text-xs">{data.description}</div>
-          <div className="mt-1 truncate text-xs text-gray-400 dark:text-dark-300">
-            {data.time}
+          <div className="mt-0.5 text-xs text-gray-600 dark:text-dark-200">
+            {data.description}
+          </div>
+          <div className="mt-1 text-xs text-gray-400 dark:text-dark-300">
+            {data.timestamp ? formatTime(data.timestamp) : data.time}
           </div>
         </div>
       </div>
@@ -301,4 +272,5 @@ function NotificationItem({ data, remove }) {
 NotificationItem.propTypes = {
   data: PropTypes.object,
   remove: PropTypes.func,
+  formatTime: PropTypes.func,
 };

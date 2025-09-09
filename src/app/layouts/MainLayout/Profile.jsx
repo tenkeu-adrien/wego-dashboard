@@ -22,7 +22,7 @@ const links = [
   {
     id: "1",
     title: "Profile",
-    description: "Your profile Setting",
+    description: "Your profile Settinggggg",
     to: "/settings/general",
     Icon: TbUser,
     color: "warning",
