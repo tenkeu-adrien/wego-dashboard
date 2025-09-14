@@ -7,9 +7,9 @@ import {
 } from "@headlessui/react";
 import {
   ArrowLeftStartOnRectangleIcon,
-  Cog6ToothIcon,
+  // Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import { TbUser } from "react-icons/tb";
+// import { TbUser } from "react-icons/tb";
 import { Link } from "react-router";
 
 // Local Imports
@@ -18,24 +18,24 @@ import { useAuthContext } from "app/contexts/auth/context";
 
 // ----------------------------------------------------------------------
 
-const links = [
-  {
-    id: "1",
-    title: "Profile",
-    description: "Your profile Setting",
-    to: "/settings/general",
-    Icon: TbUser,
-    color: "warning",
-  },
-  {
-    id: "2",
-    title: "Settings",
-    description: "Webapp settings",
-    to: "/settings/appearance",
-    Icon: Cog6ToothIcon,
-    color: "success",
-  },
-];
+// const links = [
+//   {
+//     id: "1",
+//     title: "Profile",
+//     description: "Your profile Settingg",
+//     to: "/settings/general",
+//     Icon: TbUser,
+//     color: "warning",
+//   },
+//   {
+//     id: "2",
+//     title: "Settings",
+//     description: "Webapp settings",
+//     to: "/settings/appearance",
+//     Icon: Cog6ToothIcon,
+//     color: "success",
+//   },
+// ];
 
 export function Profile() {
   const {logout , user, token} = useAuthContext()
@@ -67,7 +67,7 @@ export function Profile() {
           anchor={{ to: "bottom end", gap: 12 }}
           className="z-[70] flex w-64 flex-col rounded-lg border border-gray-150 bg-white shadow-soft transition dark:border-dark-600 dark:bg-dark-700 dark:shadow-none"
         >
-          {({ close }) => (
+          {/* {({ close }) => ( */}
             <>
               <div className="flex items-center gap-4 rounded-t-lg bg-gray-100 px-4 py-5 dark:bg-dark-800">
                 <Avatar size={14} src="/images/100x100.png" />
@@ -85,7 +85,7 @@ export function Profile() {
                 </div>
               </div>
               <div className="flex flex-col pb-5 pt-2">
-                {links.map((link) => (
+                {/* {links.map((link) => (
                   <Link
                     key={link.id}
                     to={link.to}
@@ -108,7 +108,7 @@ export function Profile() {
                       </div>
                     </div>
                   </Link>
-                ))}
+                ))} */}
                 <div className="px-4 pt-4">
                   <Button className="w-full gap-2" onClick={()=> logout()}>
                     <ArrowLeftStartOnRectangleIcon className="size-4.5" />
@@ -117,7 +117,7 @@ export function Profile() {
                 </div>
               </div>
             </>
-          )}
+          {/* // )} */}
         </PopoverPanel>
       </Transition>
     </Popover>

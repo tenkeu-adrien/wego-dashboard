@@ -69,6 +69,32 @@ export function Notifications() {
       setNotifications(prev => [newNotification, ...prev]);
     };
 
+
+
+     const handleCancelOrder = (orderData) => {
+      console.log("orderData", orderData);
+      
+      const newNotification = {
+        id: Date.now() + Math.random(),
+        title: "commande Annuler",
+        description: `Commande #${orderData.id} - ${orderData.total_price} FCFA`,
+        time: "à l'instant",
+        orderData: orderData,
+        timestamp: new Date(),
+      };
+
+      // Jouer le son de notification
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0; // Réinitialiser le son
+        audioRef.current.play().catch(error => {
+          console.log("Erreur de lecture audio:", error);
+        });
+      }
+
+      setNotifications(prev => [newNotification, ...prev]);
+    };
+
+
     const handleOrderUpdate = (orderData) => {
       const newNotification = {
         id: Date.now() + Math.random(),
@@ -94,10 +120,12 @@ export function Notifications() {
 
     // S'abonner aux événements Socket.io
     socket.on('order:store', handleNewOrder);
+     socket.on('order:cancel', handleCancelOrder);
     socket.on('order:delivered', handleOrderUpdate);
     return () => {
       // Se désabonner des événements
       socket.off('order:store', handleNewOrder);
+      socket.off('order:cancel', handleCancelOrder);
       socket.off('order:delivered', handleOrderUpdate);
     };
   }, []);

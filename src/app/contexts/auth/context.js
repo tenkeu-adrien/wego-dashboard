@@ -64,6 +64,7 @@ export function AuthProvider({ children }) {
             setIsLoading(true);
             setErrorMessage(null);
             const response = await axios.post(`${API_URL}/login`, credentials);
+            console.log("response.data dans login " ,response.data )
             const { token, user } = response.data;
 
             setSession({ token, user });

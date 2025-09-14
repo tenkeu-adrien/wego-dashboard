@@ -547,8 +547,8 @@ console.log("orders",orders)
                           className="bg-purple-500 hover:bg-purple-600 text-white px-3 py-2 rounded text-sm transition-colors flex items-center gap-2 shadow-md hover:shadow-lg"
                           title="Cliquer pour mettre en livraison"
                         >
-                          <span className="text-lg">🚚</span>
-                          <span>Livrer</span>
+                          <span className="text-lg"> livrer🚚</span>
+                          <span></span>
                         </button>
                       )}
                       
